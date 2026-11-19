@@ -412,6 +412,15 @@ class SettingsScreen extends StatelessWidget {
                 onChanged: prefs.setShuffleBiased,
               ),
               SwitchListTile(
+                secondary: const Icon(Icons.repeat),
+                title: const Text('Repetir la cola al iniciar'),
+                subtitle: const Text(
+                  'Activa la repetición de toda la cola de forma predeterminada.',
+                ),
+                value: prefs.queueRepeat,
+                onChanged: prefs.setQueueRepeat,
+              ),
+              SwitchListTile(
                 secondary: const Icon(Icons.graphic_eq),
                 title: const Text('Crossfade entre canciones'),
                 subtitle: const Text(

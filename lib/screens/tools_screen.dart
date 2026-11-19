@@ -77,16 +77,60 @@ class _HistoryTab extends StatelessWidget {
         .where((track) => track != null)
         .cast<Track>()
         .toList();
-    if (history.isEmpty) {
-      return const Center(child: Text('Aún no hay historial de reproducción.'));
+    final available = library.playableTracks;
+    Future<void> restoreQueue(Iterable<String> ids) async {
+      final count = await context
+          .read<PlayerService>()
+          .restoreQueueByIds(ids, available);
+      if (!context.mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(
+            count > 0
+                ? 'Cola restaurada con $count pista(s)'
+                : 'No se encontraron pistas de esa cola',
+          ),
+        ),
+      );
     }
+
     return Column(
       children: [
+        if (prefs.customQueue.isNotEmpty)
+          ListTile(
+            leading: const Icon(Icons.restore),
+            title: const Text('Restaurar última cola'),
+            subtitle: Text('${prefs.customQueue.length} pista(s) guardada(s)'),
+            onTap: () => restoreQueue(prefs.customQueue),
+          ),
+        if (prefs.queueHistory.isNotEmpty)
+          ExpansionTile(
+            leading: const Icon(Icons.history_toggle_off),
+            title: const Text('Colas recientes'),
+            children: prefs.queueHistory.take(10).map((entry) {
+              final ids = entry.split(',').where((id) => id.isNotEmpty).toList();
+              return ListTile(
+                title: Text('Cola de ${ids.length} pista(s)'),
+                subtitle: Text(
+                  ids
+                      .take(3)
+                      .map((id) => byId[id]?.title ?? id)
+                      .join(' · '),
+                ),
+                onTap: () => restoreQueue(ids),
+              );
+            }).toList(),
+          ),
         ListTile(
           leading: const Icon(Icons.delete_outline),
           title: const Text('Borrar historial'),
           onTap: prefs.clearPlaybackHistory,
         ),
+        if (history.isEmpty)
+          const Padding(
+            padding: EdgeInsets.all(16),
+            child: Text('Aún no hay historial de reproducción.'),
+          ),
         Expanded(
           child: ListView.separated(
             itemCount: history.length,

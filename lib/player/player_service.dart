@@ -81,6 +81,7 @@ class PlayerService extends ChangeNotifier {
 
     final prefs = _prefs;
     if (prefs != null) {
+      if (prefs.queueRepeat) _loopMode = LoopMode.all;
       if (prefs.rememberShuffle) {
         _shuffle = prefs.getBool('player.shuffle_saved');
       }
@@ -206,6 +207,23 @@ class PlayerService extends ChangeNotifier {
     _maybeFetchLyrics();
     await _player.play();
     notifyListeners();
+  }
+
+  /// Restaura una cola guardada a partir de los IDs de las pistas.
+  /// Devuelve cuántas pistas se pudieron recuperar de la biblioteca actual.
+  Future<int> restoreQueueByIds(
+    Iterable<String> ids,
+    Iterable<Track> available,
+  ) async {
+    final byId = <String, Track>{for (final track in available) track.id: track};
+    final restored = <Track>[];
+    for (final id in ids) {
+      final track = byId[id];
+      if (track != null) restored.add(track);
+    }
+    if (restored.isEmpty) return 0;
+    await setQueue(restored);
+    return restored.length;
   }
 
   Future<void> _applyAudioSettings() async {
