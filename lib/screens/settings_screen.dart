@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
@@ -8,7 +10,9 @@ import '../core/export_service.dart';
 import '../core/library_service.dart';
 import '../core/providers.dart';
 import '../core/theme_settings.dart';
+import '../core/update_service.dart';
 import '../core/user_preferences.dart';
+import '../widgets/update_dialog.dart';
 
 class SettingsScreen extends StatelessWidget {
   const SettingsScreen({super.key});
@@ -102,6 +106,35 @@ class SettingsScreen extends StatelessWidget {
     }
   }
 
+  String _updateSubtitle(UpdateService updates) {
+    switch (updates.status) {
+      case UpdateStatus.idle:
+        return 'Version instalada: $appVersion';
+      case UpdateStatus.checking:
+        return 'Buscando en GitHub…';
+      case UpdateStatus.available:
+        final release = updates.release;
+        return release == null
+            ? 'Hay una version nueva'
+            : '${release.tag} disponible';
+      case UpdateStatus.upToDate:
+        return 'Estas al dia (canal ${updates.channel.name}).';
+      case UpdateStatus.unknown:
+        final release = updates.release;
+        return release == null
+            ? 'Compilacion local'
+            : 'Ultima publicacion: ${release.tag} (compilacion local)';
+      case UpdateStatus.error:
+        return 'No se pudo comprobar. Revisa la conexion.';
+      case UpdateStatus.downloading:
+        return 'Descargando… ${(updates.progress * 100).toInt()}%';
+      case UpdateStatus.installing:
+        return 'Abriendo el instalador…';
+      case UpdateStatus.installed:
+        return 'Instalador abierto';
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     return ListView(
@@ -121,6 +154,72 @@ class SettingsScreen extends StatelessWidget {
             subtitle: Text(
               connectivity.isOnline ? 'Conectado' : 'Modo offline',
             ),
+          ),
+        ),
+        const Divider(),
+        Text(
+          'Actualizaciones',
+          style: Theme.of(context).textTheme.titleMedium,
+        ),
+        Consumer<UpdateService>(
+          builder: (context, updates, _) => Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              SwitchListTile(
+                secondary: const Icon(Icons.autorenew),
+                title: const Text('Buscar automaticamente'),
+                subtitle: Text(
+                  'Comprueba los releases de GitHub cada '
+                  '${UpdateService.checkInterval.inHours} horas.',
+                ),
+                value: updates.autoCheck,
+                onChanged: updates.setAutoCheck,
+              ),
+              ListTile(
+                leading: const Icon(Icons.system_update_alt),
+                title: const Text('Buscar actualizaciones ahora'),
+                subtitle: Text(_updateSubtitle(updates)),
+                trailing: updates.isChecking
+                    ? const SizedBox(
+                        width: 20,
+                        height: 20,
+                        child: CircularProgressIndicator(strokeWidth: 2),
+                      )
+                    : const Icon(Icons.refresh),
+                onTap: updates.isChecking || updates.isBusy
+                    ? null
+                    : () async {
+                        await updates.check(force: true);
+                        if (!context.mounted) return;
+                        if (updates.shouldPrompt) {
+                          updates.markPromptShown();
+                          unawaited(showUpdateDialog(context));
+                        } else {
+                          ScaffoldMessenger.of(context).showSnackBar(
+                            SnackBar(content: Text(_updateSubtitle(updates))),
+                          );
+                        }
+                      },
+              ),
+              if (updates.isBusy)
+                Padding(
+                  padding: const EdgeInsets.symmetric(horizontal: 16),
+                  child: LinearProgressIndicator(
+                    value: updates.progress == 0 ? null : updates.progress,
+                  ),
+                ),
+              if (updates.error != null)
+                Padding(
+                  padding: const EdgeInsets.symmetric(horizontal: 16),
+                  child: Text(
+                    updates.error!,
+                    style: TextStyle(
+                      color: Theme.of(context).colorScheme.error,
+                      fontSize: 12,
+                    ),
+                  ),
+                ),
+            ],
           ),
         ),
         const Divider(),

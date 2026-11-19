@@ -74,7 +74,7 @@ jobs:
           EOF
 
       - name: Build APK release por ABI (beta)
-        run: flutter build apk --release --split-per-abi
+        run: flutter build apk --release --split-per-abi --dart-define=UPDATE_CHANNEL=beta --dart-define=UPDATE_BUILD=${{ github.run_number }}
 
       - name: Subir artefacto
         uses: actions/upload-artifact@v4

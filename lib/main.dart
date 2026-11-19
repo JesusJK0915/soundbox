@@ -16,6 +16,7 @@ import 'core/export_service.dart';
 import 'core/library_service.dart';
 import 'core/providers.dart';
 import 'core/theme_settings.dart';
+import 'core/update_service.dart';
 import 'core/user_preferences.dart';
 import 'player/player_service.dart';
 import 'screens/home_screen.dart';
@@ -39,6 +40,7 @@ Future<void> main() async {
   final quality = await DownloadSettingsService.load();
   final themeSettings = await ThemeSettingsService.load();
   final userPrefs = await UserPreferencesService.load();
+  final updates = UpdateService(prefs);
   final export = ExportService(prefs);
   final downloads = DownloadService(library, quality);
   final player = PlayerService(connectivity, userPrefs);
@@ -58,6 +60,7 @@ Future<void> main() async {
       quality: quality,
       themeSettings: themeSettings,
       userPrefs: userPrefs,
+      updates: updates,
     ),
   );
 
@@ -79,6 +82,7 @@ class SoundBoxApp extends StatefulWidget {
     required this.quality,
     required this.themeSettings,
     required this.userPrefs,
+    required this.updates,
   });
 
   final SharedPreferences prefs;
@@ -91,6 +95,7 @@ class SoundBoxApp extends StatefulWidget {
   final DownloadSettingsService quality;
   final ThemeSettingsService themeSettings;
   final UserPreferencesService userPrefs;
+  final UpdateService updates;
 
   @override
   State<SoundBoxApp> createState() => _SoundBoxAppState();
@@ -136,6 +141,7 @@ class _SoundBoxAppState extends State<SoundBoxApp> {
         ChangeNotifierProvider<UserPreferencesService>.value(
           value: widget.userPrefs,
         ),
+        ChangeNotifierProvider<UpdateService>.value(value: widget.updates),
       ],
       child: Consumer2<ThemeSettingsService, UserPreferencesService>(
         builder: (context, themeSettings, userPrefs, _) {
