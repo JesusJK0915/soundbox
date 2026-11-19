@@ -15,7 +15,9 @@ void main() {
       expect(cues.first.text, 'Primera');
       expect(cues[1].start, const Duration(milliseconds: 3500));
       expect(cues[1].end, const Duration(milliseconds: 6000));
+      expect(cues[1].text, 'Segunda');
       expect(cues[2].start, const Duration(milliseconds: 6000));
+      expect(cues[2].end, const Duration(milliseconds: 8000));
       expect(cues.last.text, 'Tercera');
     });
 

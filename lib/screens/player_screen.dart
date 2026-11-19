@@ -1,3 +1,5 @@
+import 'dart:ui' show ImageFilter;
+
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:just_audio/just_audio.dart';
@@ -79,6 +81,11 @@ class PlayerScreen extends StatelessWidget {
                   ),
                 ),
                 IconButton(
+                  tooltip: 'Letra',
+                  icon: const Icon(Icons.short_text_rounded),
+                  onPressed: () => showLyricsSheet(context, track),
+                ),
+                IconButton(
                   tooltip: 'Detalles de la canción',
                   icon: const Icon(Icons.info_outline_rounded),
                   onPressed: () => showTrackDetails(context, track),
@@ -142,6 +149,17 @@ class PlayerScreen extends StatelessWidget {
                                             await prefs.toggleFavorite(track.id);
                                             if (prefs.haptics) {
                                               HapticFeedback.mediumImpact();
+                                            }
+                                          }
+                                        : null,
+                                    onHorizontalDragEnd: prefs.swipeToSkip
+                                        ? (details) {
+                                            final velocity =
+                                                details.primaryVelocity ?? 0;
+                                            if (velocity > 400) {
+                                              player.skipPrevious();
+                                            } else if (velocity < -400) {
+                                              player.skipNext();
                                             }
                                           }
                                         : null,
@@ -424,7 +442,12 @@ class _HeroArtwork extends StatelessWidget {
                   ),
                 ],
               ),
-              child: TrackArtwork(track: track, iconSize: 104),
+              child: context.watch<UserPreferencesService>().artworkBlur
+                  ? ImageFiltered(
+                      imageFilter: ImageFilter.blur(sigmaX: 3, sigmaY: 3),
+                      child: TrackArtwork(track: track, iconSize: 104),
+                    )
+                  : TrackArtwork(track: track, iconSize: 104),
             ),
           ),
         );

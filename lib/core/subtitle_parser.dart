@@ -62,6 +62,8 @@ List<SubtitleCue> parseLrc(String content) {
     }
   }
 
+  raw.sort((a, b) => a.start.compareTo(b.start));
+
   for (var i = 0; i < raw.length; i++) {
     if (raw[i].end != raw[i].start) continue;
     var end = raw[i].start + const Duration(seconds: 4);
@@ -74,8 +76,13 @@ List<SubtitleCue> parseLrc(String content) {
     raw[i] = SubtitleCue(start: raw[i].start, end: end, text: raw[i].text);
   }
 
-  raw.sort((a, b) => a.start.compareTo(b.start));
-  return raw;
+
+  final unique = <SubtitleCue>[];
+  for (final cue in raw) {
+    if (unique.isNotEmpty && unique.last.start == cue.start) continue;
+    unique.add(cue);
+  }
+  return unique;
 }
 
 List<SubtitleCue> parseSubtitles(String content) {

@@ -256,6 +256,17 @@ class SettingsScreen extends StatelessWidget {
                   value: theme.artworkColors,
                   onChanged: theme.setArtworkColors,
                 ),
+                Consumer<UserPreferencesService>(
+                  builder: (context, prefs, _) => SwitchListTile(
+                    secondary: const Icon(Icons.blur_on),
+                    title: const Text('Carátula difuminada'),
+                    subtitle: const Text(
+                      'Aplica un suave desenfoque a la carátula del reproductor.',
+                    ),
+                    value: prefs.artworkBlur,
+                    onChanged: prefs.setArtworkBlur,
+                  ),
+                ),
                 const Padding(
                   padding: EdgeInsets.symmetric(horizontal: 16, vertical: 4),
                   child: Text(

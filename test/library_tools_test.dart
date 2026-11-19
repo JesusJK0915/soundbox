@@ -62,9 +62,10 @@ void main() {
 
   test('resuelve las pistas de una playlist', () async {
     final tools = await freshService();
-    final playlist = await tools.createPlaylist('Lista');
-    await tools.addToPlaylist(playlist.id, '1');
-    await tools.addToPlaylist(playlist.id, '3');
+    final created = await tools.createPlaylist('Lista');
+    await tools.addToPlaylist(created.id, '1');
+    await tools.addToPlaylist(created.id, '3');
+    final playlist = tools.playlists.single;
     final tracks = [track('1', 'A'), track('2', 'B'), track('3', 'C')];
     expect(tools.tracksOf(playlist, tracks).map((t) => t.title), ['A', 'C']);
   });
