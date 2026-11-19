@@ -587,16 +587,13 @@ class _Progress extends StatelessWidget {
 
   void _seekBy(Duration delta) {
     final target = position + delta;
-    final end = duration;
-    onSeek(
-      end == null
-          ? target < Duration.zero ? Duration.zero : target
-          : target < Duration.zero
-              ? Duration.zero
-              : target > end
-                  ? end
-                  : target,
-    );
+    if (target < Duration.zero) {
+      onSeek(Duration.zero);
+    } else if (target > duration) {
+      onSeek(duration);
+    } else {
+      onSeek(target);
+    }
   }
 
   String _format(Duration value) {

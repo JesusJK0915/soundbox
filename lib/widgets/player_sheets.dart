@@ -1,11 +1,10 @@
 import 'package:flutter/material.dart';
-import 'package:just_audio/just_audio.dart';
 import 'package:provider/provider.dart';
 
 import '../core/models.dart';
 import '../player/player_service.dart';
 
-Future<void?> _showSheet(
+Future<void> _showSheet(
   BuildContext context,
   Widget Function(BuildContext context) builder,
 ) {
@@ -45,7 +44,7 @@ Widget _sheetHandle(ColorScheme scheme) => Center(
     );
 
 /// Velocidad de reproducción.
-Future<void?> showSpeedSheet(BuildContext context) {
+Future<void> showSpeedSheet(BuildContext context) {
   return _showSheet(context, (context) {
     final scheme = Theme.of(context).colorScheme;
     return Consumer<PlayerService>(
@@ -99,7 +98,7 @@ Future<void?> showSpeedSheet(BuildContext context) {
 }
 
 /// Temporizador para detener la música al dormirse.
-Future<void?> showSleepSheet(BuildContext context) {
+Future<void> showSleepSheet(BuildContext context) {
   const options = <int>[5, 10, 15, 20, 30, 45, 60, 90];
   return _showSheet(context, (context) {
     final scheme = Theme.of(context).colorScheme;
@@ -184,7 +183,7 @@ Future<void?> showSleepSheet(BuildContext context) {
 }
 
 /// Letra incrustada en los metadatos del archivo.
-Future<void?> showLyricsSheet(BuildContext context, Track track) {
+Future<void> showLyricsSheet(BuildContext context, Track track) {
   final lyrics = track.extraTags?['Letra'];
   return _showSheet(context, (context) {
     final scheme = Theme.of(context).colorScheme;
