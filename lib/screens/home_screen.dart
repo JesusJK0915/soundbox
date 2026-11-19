@@ -128,7 +128,7 @@ class _LibraryFab extends StatelessWidget {
           heroTag: 'scan-folder',
           tooltip: 'Escanear carpeta',
           onPressed: () => _scanFolder(context),
-          child: const Icon(Icons.folder_search),
+          child: const Icon(Icons.folder_open),
         ),
         const SizedBox(width: 12),
         FloatingActionButton(
