@@ -10,6 +10,25 @@ enum AudioFormat {
   original,
 }
 
+extension AudioFormatLabel on AudioFormat {
+  String get label {
+    switch (this) {
+      case AudioFormat.mp3:
+        return 'MP3';
+      case AudioFormat.m4a:
+        return 'M4A (AAC)';
+      case AudioFormat.ogg:
+        return 'OGG (Vorbis)';
+      case AudioFormat.flac:
+        return 'FLAC (sin perdida)';
+      case AudioFormat.wav:
+        return 'WAV (sin perdida)';
+      case AudioFormat.original:
+        return 'Original (sin convertir)';
+    }
+  }
+}
+
 /// Formato y bitrate aplicados al convertir las descargas en el dispositivo.
 class DownloadSettingsService extends ChangeNotifier {
   static const _formatKey = 'download.format';
@@ -28,8 +47,8 @@ class DownloadSettingsService extends ChangeNotifier {
 
   final SharedPreferences? _prefs;
 
-  AudioFormat format;
-  int bitrate;
+  late AudioFormat format;
+  late int bitrate;
 
   static Future<DownloadSettingsService> load() async =>
       DownloadSettingsService(await SharedPreferences.getInstance());
@@ -72,22 +91,7 @@ class DownloadSettingsService extends ChangeNotifier {
     }
   }
 
-  String get label {
-    switch (format) {
-      case AudioFormat.mp3:
-        return 'MP3';
-      case AudioFormat.m4a:
-        return 'M4A (AAC)';
-      case AudioFormat.ogg:
-        return 'OGG (Vorbis)';
-      case AudioFormat.flac:
-        return 'FLAC (sin perdida)';
-      case AudioFormat.wav:
-        return 'WAV (sin perdida)';
-      case AudioFormat.original:
-        return 'Original (sin convertir)';
-    }
-  }
+  String get label => format.label;
 
   void setFormat(AudioFormat value) {
     if (format == value) return;
