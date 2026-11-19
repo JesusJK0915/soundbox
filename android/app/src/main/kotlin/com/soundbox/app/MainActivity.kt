@@ -3,7 +3,10 @@ package com.soundbox.app
 import android.app.Activity
 import android.content.Intent
 import android.net.Uri
+import android.os.Build
 import android.provider.DocumentsContract
+import android.provider.Settings
+import androidx.core.content.FileProvider
 import io.flutter.embedding.android.FlutterActivity
 import io.flutter.embedding.engine.FlutterEngine
 import io.flutter.plugin.common.MethodChannel
@@ -13,6 +16,7 @@ import java.io.FileInputStream
 class MainActivity : FlutterActivity() {
     companion object {
         private const val CHANNEL = "com.soundbox.app/export"
+        private const val UPDATE_CHANNEL = "com.soundbox.app/update"
         private const val REQUEST_SAVE_FILE = 1001
         private const val REQUEST_PICK_FOLDER = 1002
     }
@@ -76,7 +80,87 @@ class MainActivity : FlutterActivity() {
                     else -> result.notImplemented()
                 }
             }
+
+        MethodChannel(flutterEngine.dartExecutor.binaryMessenger, UPDATE_CHANNEL)
+            .setMethodCallHandler { call, result ->
+                when (call.method) {
+                    "getAbi" -> result.success(
+                        Build.SUPPORTED_ABIS.firstOrNull() ?: ""
+                    )
+
+                    "canInstall" -> result.success(canInstallApks())
+
+                    "openInstallSettings" -> {
+                        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+                            val intent = Intent(
+                                Settings.ACTION_MANAGE_UNKNOWN_APP_SOURCES,
+                                Uri.parse("package:$packageName")
+                            ).addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
+                            startActivity(intent)
+                        }
+                        result.success(true)
+                    }
+
+                    "installApk" -> {
+                        val path = call.argument<String>("path")
+                        val file = if (path == null) null else File(path)
+                        if (file == null || !file.exists()) {
+                            result.error("missing_apk", "El APK no existe", null)
+                            return@setMethodCallHandler
+                        }
+                        if (!canInstallApks()) {
+                            result.error(
+                                "install_permission",
+                                "Falta permiso de instalacion",
+                                null
+                            )
+                            return@setMethodCallHandler
+                        }
+                        try {
+                            val uri = FileProvider.getUriForFile(
+                                this,
+                                "$packageName.fileprovider",
+                                file
+                            )
+                            val intent = Intent(Intent.ACTION_VIEW).apply {
+                                setDataAndType(
+                                    uri,
+                                    "application/vnd.android.package-archive"
+                                )
+                                addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION)
+                                addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
+                            }
+                            startActivity(intent)
+                            result.success(true)
+                        } catch (error: Exception) {
+                            result.error("install_error", error.message, null)
+                        }
+                    }
+
+                    "openUrl" -> {
+                        val url = call.argument<String>("url")
+                        if (url == null) {
+                            result.error("missing_url", "Falta la URL", null)
+                            return@setMethodCallHandler
+                        }
+                        try {
+                            val intent = Intent(Intent.ACTION_VIEW, Uri.parse(url))
+                                .addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
+                            startActivity(intent)
+                            result.success(true)
+                        } catch (error: Exception) {
+                            result.error("open_error", error.message, null)
+                        }
+                    }
+
+                    else -> result.notImplemented()
+                }
+            }
     }
+
+    private fun canInstallApks(): Boolean =
+        Build.VERSION.SDK_INT < Build.VERSION_CODES.O ||
+            packageManager.canRequestPackageInstalls()
 
     override fun onActivityResult(requestCode: Int, resultCode: Int, data: Intent?) {
         super.onActivityResult(requestCode, resultCode, data)

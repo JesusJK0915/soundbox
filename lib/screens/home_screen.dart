@@ -1,11 +1,15 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:provider/provider.dart';
 
 import '../core/connectivity_service.dart';
 import '../core/library_service.dart';
+import '../core/update_service.dart';
 import '../core/user_preferences.dart';
 import '../widgets/floating_dock.dart';
+import '../widgets/update_dialog.dart';
 import 'downloads_screen.dart';
 import 'library_screen.dart';
 import 'search_screen.dart';
@@ -21,6 +25,7 @@ class HomeScreen extends StatefulWidget {
 class _HomeScreenState extends State<HomeScreen> {
   int _index = 0;
   double _direction = 1;
+  UpdateService? _updates;
 
   late final List<Widget> _pages = const [
     LibraryScreen(),
@@ -28,6 +33,32 @@ class _HomeScreenState extends State<HomeScreen> {
     DownloadsScreen(),
     SettingsScreen(),
   ];
+
+  @override
+  void initState() {
+    super.initState();
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (!mounted) return;
+      final updates = context.read<UpdateService>();
+      _updates = updates;
+      updates.addListener(_maybePromptUpdate);
+      unawaited(updates.checkIfNeeded());
+      _maybePromptUpdate();
+    });
+  }
+
+  void _maybePromptUpdate() {
+    final updates = _updates;
+    if (!mounted || updates == null || !updates.shouldPrompt) return;
+    updates.markPromptShown();
+    unawaited(showUpdateDialog(context));
+  }
+
+  @override
+  void dispose() {
+    _updates?.removeListener(_maybePromptUpdate);
+    super.dispose();
+  }
 
   void _goTo(int index) {
     if (index == _index) return;

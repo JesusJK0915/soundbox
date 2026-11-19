@@ -1,5 +1,16 @@
 const String appName = 'SoundBox';
-const String appVersion = '0.9.0';
+const String appVersion = '0.10.0';
+
+/// Los workflows inyectan el canal y el numero de build del release con
+/// `--dart-define`. Asi el numero de la etiqueta de GitHub siempre coincide
+/// con la compilacion instalada, sin tener que tocar el codigo a mano.
+const String updateChannelName = String.fromEnvironment(
+  'UPDATE_CHANNEL',
+  defaultValue: 'beta',
+);
+const int updateBuildNumber = int.fromEnvironment('UPDATE_BUILD', defaultValue: 0);
+const String updateOwner = 'JesusJK0915';
+const String updateRepo = 'soundbox';
 
 /// Claves opcionales. Se pueden cambiar desde Ajustes sin recompilar.
 /// Si estan vacias, el proveedor correspondiente aparece desactivado.
