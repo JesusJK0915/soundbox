@@ -8,6 +8,7 @@ import '../core/connectivity_service.dart';
 import '../core/library_service.dart';
 import '../core/update_service.dart';
 import '../core/user_preferences.dart';
+import '../widgets/mini_player.dart';
 import '../widgets/update_dialog.dart';
 import 'downloads_screen.dart';
 import 'library_screen.dart';
@@ -133,6 +134,7 @@ class _HomeScreenState extends State<HomeScreen> {
                 },
               ),
               Expanded(child: _pages[_index]),
+              const MiniPlayer(),
             ],
           ),
           bottomNavigationBar: Column(
