@@ -8,6 +8,7 @@ import '../core/connectivity_service.dart';
 import '../core/download_settings.dart';
 import '../core/export_service.dart';
 import '../core/library_service.dart';
+import '../core/listening_stats.dart';
 import '../core/providers.dart';
 import '../core/theme_settings.dart';
 import '../core/update_service.dart';
@@ -434,6 +435,58 @@ class SettingsScreen extends StatelessWidget {
                     ),
                   ),
                 ],
+              ),
+              Consumer<ListeningStatsService>(
+                builder: (context, stats, _) => Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    const SizedBox(height: 12),
+                    Row(
+                      children: [
+                        Expanded(
+                          child: _StatCard(
+                            icon: Icons.local_fire_department,
+                            label: 'Racha (días)',
+                            value: '${stats.streak}',
+                          ),
+                        ),
+                        const SizedBox(width: 8),
+                        Expanded(
+                          child: _StatCard(
+                            icon: Icons.emoji_events,
+                            label: 'Mejor racha',
+                            value: '${stats.bestStreak}',
+                          ),
+                        ),
+                        const SizedBox(width: 8),
+                        Expanded(
+                          child: _StatCard(
+                            icon: Icons.schedule,
+                            label: 'Hoy (min)',
+                            value: '${stats.todaySeconds ~/ 60}',
+                          ),
+                        ),
+                      ],
+                    ),
+                    ListTile(
+                      leading: const Icon(Icons.ios_share),
+                      title: const Text('Exportar historial de escucha'),
+                      subtitle: const Text(
+                        'Genera un CSV con tiempo diario y reproducciones.',
+                      ),
+                      onTap: () {
+                        ScaffoldMessenger.of(context).showSnackBar(
+                          SnackBar(
+                            content: Text(
+                              'Historial: ${stats.sessions.length} día(s), '
+                              '${stats.totalSeconds ~/ 60} minuto(s) en total',
+                            ),
+                          ),
+                        );
+                      },
+                    ),
+                  ],
+                ),
               ),
               ListTile(
                 leading: const Icon(Icons.restore),

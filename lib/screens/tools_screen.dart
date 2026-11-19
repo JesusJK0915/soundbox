@@ -38,7 +38,6 @@ class _ToolsScreenState extends State<ToolsScreen> with SingleTickerProviderStat
       children: [
         TabBar(
           controller: _tabs,
-          isScrollIndicator: true,
           tabs: const [
             Tab(text: 'Historial'),
             Tab(text: 'Duplicados'),
@@ -239,7 +238,7 @@ class _PlaylistsTabState extends State<_PlaylistsTab> {
                         ListTile(
                           leading: const Icon(Icons.add),
                           title: const Text('Añadir toda la biblioteca'),
-                          onPressed: () async {
+                          onTap: () async {
                             for (final track in library.playableTracks) {
                               await tools.addToPlaylist(playlist.id, track.id);
                             }

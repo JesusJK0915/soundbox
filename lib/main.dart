@@ -16,6 +16,7 @@ import 'core/download_settings.dart';
 import 'core/export_service.dart';
 import 'core/library_service.dart';
 import 'core/library_tools.dart';
+import 'core/listening_stats.dart';
 import 'core/lyrics_service.dart';
 import 'core/providers.dart';
 import 'core/theme_settings.dart';
@@ -48,8 +49,9 @@ Future<void> main() async {
   final export = ExportService(prefs);
   final downloads = DownloadService(library, quality);
   final lyrics = LyricsService();
-  final player = PlayerService(connectivity, userPrefs, library, lyrics);
+  final player = PlayerService(connectivity, userPrefs, library, lyrics, stats);
   final tools = LibraryToolsService(prefs);
+  final stats = ListeningStatsService(prefs);
 
   final session = await AudioSession.instance;
   await session.configure(const AudioSessionConfiguration.music());
@@ -70,6 +72,7 @@ Future<void> main() async {
       updates: updates,
       lyrics: lyrics,
       tools: tools,
+      stats: stats,
     ),
   );
 
@@ -95,6 +98,7 @@ class SoundBoxApp extends StatefulWidget {
     required this.updates,
     required this.lyrics,
     required this.tools,
+    required this.stats,
   });
 
   final SharedPreferences prefs;
@@ -111,6 +115,7 @@ class SoundBoxApp extends StatefulWidget {
   final UpdateService updates;
   final LyricsService lyrics;
   final LibraryToolsService tools;
+  final ListeningStatsService stats;
 
   @override
   State<SoundBoxApp> createState() => _SoundBoxAppState();
@@ -162,6 +167,7 @@ class _SoundBoxAppState extends State<SoundBoxApp> {
         ChangeNotifierProvider<UpdateService>.value(value: widget.updates),
         Provider<LyricsService>.value(value: widget.lyrics),
         ChangeNotifierProvider<LibraryToolsService>.value(value: widget.tools),
+        ChangeNotifierProvider<ListeningStatsService>.value(value: widget.stats),
       ],
       child: Consumer2<ThemeSettingsService, UserPreferencesService>(
         builder: (context, themeSettings, userPrefs, _) {

@@ -85,13 +85,12 @@ Future<void> showTrackDetails(BuildContext context, Track track) async {
                             );
                             return;
                           }
-                          final result =
-                              await context.read<LyricsService>().fetch(track);
+                          final lyricsService = context.read<LyricsService>();
+                          final library = context.read<LibraryService>();
+                          final result = await lyricsService.fetch(track);
                           final content = result?.lrcContent;
                           if (content != null) {
-                            await context
-                                .read<LibraryService>()
-                                .attachLyrics(track.id, content);
+                            await library.attachLyrics(track.id, content);
                           }
                           if (context.mounted) {
                             ScaffoldMessenger.of(context).showSnackBar(

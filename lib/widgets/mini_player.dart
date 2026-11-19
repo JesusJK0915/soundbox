@@ -43,7 +43,7 @@ class MiniPlayer extends StatelessWidget {
                     ),
                   );
                 },
-                onDoubleTap: prefs.doubleTapFavorite && track != null
+                onDoubleTap: prefs.doubleTapFavorite
                     ? () => prefs.toggleFavorite(track.id)
                     : null,
                 child: Column(

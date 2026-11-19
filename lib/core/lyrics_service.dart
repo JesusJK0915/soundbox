@@ -93,7 +93,7 @@ class LyricsService {
     final key = _key(track);
     if (_cache.containsKey(key)) return Future.value(_cache[key]);
     final next = _queue.then((_) => _fetchQueued(track, key));
-    _queue = next.catchError((_) {});
+    _queue = next.catchError((_) => null);
     return next;
   }
 

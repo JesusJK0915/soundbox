@@ -78,13 +78,13 @@ class LibraryToolsService extends ChangeNotifier {
           .map((value) => jsonDecode(value) as Map<String, dynamic>)
           .map(Playlist.fromJson),
     );
-    final gains = _prefs.getDoubleList(eqKey);
+    final gains = _readGains();
     _bands = <EqBand>[
-      EqBand(60, gains != null && gains.length > 0 ? gains[0] : 0),
-      EqBand(230, gains != null && gains.length > 1 ? gains[1] : 0),
-      EqBand(910, gains != null && gains.length > 2 ? gains[2] : 0),
-      EqBand(3600, gains != null && gains.length > 3 ? gains[3] : 0),
-      EqBand(14000, gains != null && gains.length > 4 ? gains[4] : 0),
+      EqBand(60, gains[0]),
+      EqBand(230, gains[1]),
+      EqBand(910, gains[2]),
+      EqBand(3600, gains[3]),
+      EqBand(14000, gains[4]),
     ];
     _normalize = _prefs.getBool(normalizeKey) ?? false;
     _replayGain = _prefs.getBool(replayGainKey) ?? false;
@@ -206,10 +206,22 @@ class LibraryToolsService extends ChangeNotifier {
     await _persistEq();
   }
 
+  List<double> _readGains() {
+    final raw = _prefs.getString(eqKey);
+    if (raw != null) {
+      try {
+        final decoded = jsonDecode(raw) as List;
+        final gains = decoded.map((value) => (value as num).toDouble()).toList();
+        if (gains.length == 5) return gains;
+      } catch (_) {}
+    }
+    return <double>[0, 0, 0, 0, 0];
+  }
+
   Future<void> _persistEq() async {
-    await _prefs.setDoubleList(
+    await _prefs.setString(
       eqKey,
-      _bands.map((band) => band.gain).toList(),
+      jsonEncode(_bands.map((band) => band.gain).toList()),
     );
     notifyListeners();
   }
