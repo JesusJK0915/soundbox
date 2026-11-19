@@ -12,7 +12,8 @@ Tu PC solo sirve para escribir codigo y hacer `push`.
 - Conversion local a **MP3, M4A/AAC, OGG, FLAC o WAV** con bitrate de 64 a 320 kbps.
 - Subtitulos `.srt` / `.vtt` que se adjuntan a una pista.
 - Pega una **URL directa** a un archivo propio para descargarlo.
-- Pega un **link de YouTube** y busca la cancion en fuentes legales (solo metadata).
+- Pega un **link de YouTube** y extrae solo el audio (modo experimental).
+- **Escanea una carpeta** e importa toda la musica que encuentre.
 - **Guardar en otro lugar**: exporta una canción o toda la biblioteca a la carpeta que elijas (Descargas, Drive, etc.).
 
 ## Formato y calidad de descarga
@@ -61,19 +62,23 @@ La app solo maneja audio: no importa ni descarga video.
 
 Las claves tambien se pueden dejar en `lib/core/config.dart` como valores por defecto.
 
-### Links de YouTube
+### Links de YouTube (modo directo)
 
-YouTube no expone una API de descarga y sus terminos prohiben extraer audio.
-SoundBox no descarga ni extrae nada de un video: si pegas un link de
-`youtube.com` o `youtu.be` en **Buscar**, la app consulta solo la metadata
-publica del video (`videos.list?part=snippet`), limpia el titulo y busca esa
-cancion en las fuentes legales activas. Los resultados aparecen abajo para que
-elijas cual descargar.
+Pega un link de `youtube.com`, `youtu.be`, `/shorts/` o `/embed/` en **Buscar**
+y SoundBox extrae **solo el audio** usando `youtube_explode_dart` (el
+equivalente a yt-dlp en Dart, sin API key). El archivo se convierte al formato y
+bitrate elegidos y entra en la biblioteca. Es una funcion **experimental**:
+YouTube suele cambiar su funcionamiento y puede dejar de trabajar hasta que se
+actualice la libreria.
 
-Para usarlo, activa **YouTube (solo busqueda)** en Ajustes y pega una API key de
-YouTube Data API v3 (tambien se puede dejar en `lib/core/config.dart`). Sin
-clave, los links de YouTube muestran un aviso. El video nunca se guarda: solo se
-leen titulo, canal y portada.
+El modo directo viene activado. En **Ajustes → Opciones experimentales** puedes
+desactivarlo: entonces los links de YouTube pasan a consultar solo la metadata
+publica (`videos.list?part=snippet`, con API key de YouTube Data API v3) y
+buscan la cancion en las fuentes legales activas, sin extraer audio del video.
+
+La primera vez se muestra una pantalla de bienvenida con el aviso de uso
+responsable. Usa esta funcion solo con audio tuyo, con licencia o con permiso
+del autor.
 
 ## Como obtener el APK
 

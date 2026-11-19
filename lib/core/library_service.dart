@@ -4,6 +4,7 @@ import 'dart:io';
 import 'package:flutter/foundation.dart';
 import 'package:file_picker/file_picker.dart';
 import 'package:path/path.dart' as p;
+import 'package:permission_handler/permission_handler.dart';
 import 'package:path_provider/path_provider.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
@@ -17,6 +18,16 @@ const _videoFormats = <String>{
   'avi',
   'm4v',
   'video',
+};
+
+const _audioFormats = <String>{
+  'mp3',
+  'm4a',
+  'ogg',
+  'flac',
+  'wav',
+  'aac',
+  'opus',
 };
 
 bool _isVideoFormat(String? format) =>
@@ -86,6 +97,62 @@ class LibraryService extends ChangeNotifier {
       );
     }
     await _persist();
+  }
+
+  /// Elige una carpeta, busca archivos de audio y los copia a la biblioteca.
+  Future<int> scanAudioFolder() async {
+    final audioPermission = await Permission.audio.request();
+    if (!audioPermission.isGranted) {
+      final storagePermission = await Permission.storage.request();
+      if (!storagePermission.isGranted) {
+        throw StateError('Falta permiso para leer archivos de audio');
+      }
+    }
+
+    final folder = await FilePicker.platform.getDirectoryPath();
+    if (folder == null || folder == '/') return 0;
+
+    final directory = Directory(folder);
+    if (!await directory.exists()) return 0;
+
+    var imported = 0;
+    try {
+      await for (final entity
+          in directory.list(recursive: true, followLinks: false)) {
+        if (entity is! File) continue;
+        final extension = p
+            .extension(entity.path)
+            .toLowerCase()
+            .replaceFirst('.', '');
+        if (!_audioFormats.contains(extension)) continue;
+        await _copyToLibrary(
+          sourcePath: entity.path,
+          targetDir: audioDir,
+          downloaded: false,
+        );
+        imported++;
+      }
+    } on FileSystemException {
+      // Algunas rutas SAF de Android no se pueden listar con dart:io.
+      // En ese caso el usuario selecciona los archivos manualmente.
+      final picked = await FilePicker.platform.pickFiles(
+        allowMultiple: true,
+        type: FileType.audio,
+      );
+      if (picked == null) return 0;
+      for (final file in picked.files) {
+        final path = file.path;
+        if (path == null || _isVideoFormat(p.extension(path))) continue;
+        await _copyToLibrary(
+          sourcePath: path,
+          targetDir: audioDir,
+          downloaded: false,
+        );
+        imported++;
+      }
+    }
+    await _persist();
+    return imported;
   }
 
   Future<String?> pickSubtitlePath() async {

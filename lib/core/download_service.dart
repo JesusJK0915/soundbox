@@ -57,6 +57,27 @@ class DownloadService extends ChangeNotifier {
     await _run(task, track, safeName);
   }
 
+  /// Registra un archivo ya descargado (por ejemplo un stream de audio) y
+  /// aplica la conversion elegida antes de anadirlo a la biblioteca.
+  Future<void> startFromFile(Track track, String sourcePath) async {
+    if (isDownloading(track.id)) return;
+    final source = File(sourcePath);
+    if (!await source.exists()) return;
+
+    final task = DownloadTask(
+      id: track.id,
+      title: track.title,
+      url: sourcePath,
+      savePath: sourcePath,
+      track: track,
+      cancelToken: CancelToken(),
+    );
+    _tasks.insert(0, task);
+    notifyListeners();
+
+    await _finish(task, track, _safeName(track.title));
+  }
+
   void pause(DownloadTask task) {
     if (task.status != DownloadStatus.downloading) return;
     task.cancelToken.cancel('paused');

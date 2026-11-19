@@ -98,12 +98,46 @@ class _HomeScreenState extends State<HomeScreen> {
 class _LibraryFab extends StatelessWidget {
   const _LibraryFab();
 
+  Future<void> _scanFolder(BuildContext context) async {
+    try {
+      final count = await context.read<LibraryService>().scanAudioFolder();
+      if (!context.mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(
+            count == 0
+                ? 'No se encontro audio nuevo en la carpeta'
+                : '$count cancion(es) importadas',
+          ),
+        ),
+      );
+    } catch (error) {
+      if (!context.mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('No se pudo escanear: $error')),
+      );
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
-    return FloatingActionButton(
-      tooltip: 'Importar musica',
-      onPressed: () => context.read<LibraryService>().importFiles(),
-      child: const Icon(Icons.audiotrack),
+    return Row(
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        FloatingActionButton(
+          heroTag: 'scan-folder',
+          tooltip: 'Escanear carpeta',
+          onPressed: () => _scanFolder(context),
+          child: const Icon(Icons.folder_search),
+        ),
+        const SizedBox(width: 12),
+        FloatingActionButton(
+          heroTag: 'import-files',
+          tooltip: 'Importar musica',
+          onPressed: () => context.read<LibraryService>().importFiles(),
+          child: const Icon(Icons.audiotrack),
+        ),
+      ],
     );
   }
 }

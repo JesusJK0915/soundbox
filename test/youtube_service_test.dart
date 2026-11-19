@@ -1,4 +1,5 @@
 import 'package:flutter_test/flutter_test.dart';
+import 'package:soundbox/core/youtube_direct_service.dart';
 import 'package:soundbox/core/youtube_service.dart';
 
 void main() {
@@ -53,6 +54,15 @@ void main() {
         channel: 'Canal de prueba VEVO',
       );
       expect(video.searchQuery, 'Cancion libre Canal de prueba');
+    });
+  });
+
+  group('YouTubeDirectService.extensionFor', () {
+    test('mapea los contenedores de audio de YouTube', () {
+      expect(YouTubeDirectService.extensionFor('mp4'), '.m4a');
+      expect(YouTubeDirectService.extensionFor('WEBM'), '.webm');
+      expect(YouTubeDirectService.extensionFor('ogg'), '.ogg');
+      expect(YouTubeDirectService.extensionFor('otro'), '.m4a');
     });
   });
 }

@@ -15,6 +15,7 @@ import 'core/library_service.dart';
 import 'core/providers.dart';
 import 'player/player_service.dart';
 import 'screens/home_screen.dart';
+import 'screens/welcome_screen.dart';
 
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -41,6 +42,7 @@ Future<void> main() async {
 
   runApp(
     SoundBoxApp(
+      prefs: prefs,
       connectivity: connectivity,
       library: library,
       downloads: downloads,
@@ -52,17 +54,10 @@ Future<void> main() async {
   );
 }
 
-class SoundBoxApp extends StatelessWidget {
-  final ConnectivityService connectivity;
-  final LibraryService library;
-  final DownloadService downloads;
-  final PlayerService player;
-  final ProviderSettingsService sources;
-  final ExportService export;
-  final DownloadSettingsService quality;
-
+class SoundBoxApp extends StatefulWidget {
   const SoundBoxApp({
     super.key,
+    required this.prefs,
     required this.connectivity,
     required this.library,
     required this.downloads,
@@ -72,17 +67,53 @@ class SoundBoxApp extends StatelessWidget {
     required this.quality,
   });
 
+  final SharedPreferences prefs;
+  final ConnectivityService connectivity;
+  final LibraryService library;
+  final DownloadService downloads;
+  final PlayerService player;
+  final ProviderSettingsService sources;
+  final ExportService export;
+  final DownloadSettingsService quality;
+
+  @override
+  State<SoundBoxApp> createState() => _SoundBoxAppState();
+}
+
+class _SoundBoxAppState extends State<SoundBoxApp> {
+  static const _welcomeKey = 'welcome.accepted';
+
+  late bool _welcomeAccepted;
+
+  @override
+  void initState() {
+    super.initState();
+    _welcomeAccepted = widget.prefs.getBool(_welcomeKey) ?? false;
+  }
+
+  Future<void> _acceptWelcome() async {
+    await widget.prefs.setBool(_welcomeKey, true);
+    if (!mounted) return;
+    setState(() => _welcomeAccepted = true);
+  }
+
   @override
   Widget build(BuildContext context) {
     return MultiProvider(
       providers: [
-        ChangeNotifierProvider<ConnectivityService>.value(value: connectivity),
-        ChangeNotifierProvider<LibraryService>.value(value: library),
-        ChangeNotifierProvider<DownloadService>.value(value: downloads),
-        ChangeNotifierProvider<PlayerService>.value(value: player),
-        ChangeNotifierProvider<ProviderSettingsService>.value(value: sources),
-        ChangeNotifierProvider<ExportService>.value(value: export),
-        ChangeNotifierProvider<DownloadSettingsService>.value(value: quality),
+        ChangeNotifierProvider<ConnectivityService>.value(
+          value: widget.connectivity,
+        ),
+        ChangeNotifierProvider<LibraryService>.value(value: widget.library),
+        ChangeNotifierProvider<DownloadService>.value(value: widget.downloads),
+        ChangeNotifierProvider<PlayerService>.value(value: widget.player),
+        ChangeNotifierProvider<ProviderSettingsService>.value(
+          value: widget.sources,
+        ),
+        ChangeNotifierProvider<ExportService>.value(value: widget.export),
+        ChangeNotifierProvider<DownloadSettingsService>.value(
+          value: widget.quality,
+        ),
       ],
       child: MaterialApp(
         title: appName,
@@ -92,7 +123,9 @@ class SoundBoxApp extends StatelessWidget {
           colorSchemeSeed: Colors.deepPurple,
           brightness: Brightness.dark,
         ),
-        home: const HomeScreen(),
+        home: _welcomeAccepted
+            ? const HomeScreen()
+            : WelcomeScreen(onAccepted: _acceptWelcome),
       ),
     );
   }

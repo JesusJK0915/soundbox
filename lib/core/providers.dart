@@ -118,11 +118,15 @@ String _defaultKey(ProviderKind kind) {
 
 /// Preferencias de fuentes de descarga, persistentes y editables en Ajustes.
 class ProviderSettingsService extends ChangeNotifier {
+  static const _directPref = 'youtube.direct';
+
   final SharedPreferences? _prefs;
   final Map<ProviderKind, bool> _enabled = <ProviderKind, bool>{};
   final Map<ProviderKind, String> _keys = <ProviderKind, String>{};
+  bool _youtubeDirect = true;
 
   ProviderSettingsService([SharedPreferences? prefs]) : _prefs = prefs {
+    _youtubeDirect = _prefs?.getBool(_directPref) ?? true;
     for (final definition in providerDefinitions) {
       final key = _prefs?.getString(definition.keyPref) ??
           _defaultKey(definition.kind);
@@ -139,6 +143,15 @@ class ProviderSettingsService extends ChangeNotifier {
   bool isEnabled(ProviderKind kind) => _enabled[kind] ?? false;
 
   String key(ProviderKind kind) => _keys[kind] ?? '';
+
+  bool get youtubeDirect => _youtubeDirect;
+
+  void setYoutubeDirect(bool value) {
+    if (_youtubeDirect == value) return;
+    _youtubeDirect = value;
+    _prefs?.setBool(_directPref, value);
+    notifyListeners();
+  }
 
   bool get hasAnyKey => _keys.values.any((value) => value.trim().isNotEmpty);
 

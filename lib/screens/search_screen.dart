@@ -5,9 +5,11 @@ import 'package:provider/provider.dart';
 import '../core/connectivity_service.dart';
 import '../core/download_service.dart';
 import '../core/download_settings.dart';
+import '../core/library_service.dart';
 import '../core/models.dart';
 import '../core/providers.dart';
 import '../core/search_service.dart';
+import '../core/youtube_direct_service.dart';
 import '../core/youtube_service.dart';
 
 class SearchScreen extends StatefulWidget {
@@ -19,10 +21,12 @@ class SearchScreen extends StatefulWidget {
 
 class _SearchScreenState extends State<SearchScreen> {
   SearchService? _search;
+  YouTubeDirectService? _youtubeDirect;
   final TextEditingController _controller = TextEditingController();
 
   bool _loading = false;
   String? _error;
+  String? _directNotice;
   List<Track> _results = const <Track>[];
   YouTubeVideo? _youtube;
   String? _youtubeUrl;
@@ -31,6 +35,39 @@ class _SearchScreenState extends State<SearchScreen> {
   void dispose() {
     _controller.dispose();
     super.dispose();
+  }
+
+  Future<void> _startDirectDownload(String url) async {
+    FocusScope.of(context).unfocus();
+    setState(() {
+      _loading = true;
+      _error = null;
+      _directNotice = null;
+      _youtube = null;
+      _youtubeUrl = null;
+      _results = const <Track>[];
+    });
+
+    try {
+      final direct = _youtubeDirect ??= YouTubeDirectService(
+        context.read<LibraryService>(),
+      );
+      final downloads = context.read<DownloadService>();
+      final track = await direct.prepare(url);
+      if (!mounted) return;
+      await downloads.startFromFile(track, track.sourceUrl);
+      if (!mounted) return;
+      setState(() {
+        _loading = false;
+        _directNotice = 'Descargando "${track.title}" · revisa Descargas';
+      });
+    } catch (error) {
+      if (!mounted) return;
+      setState(() {
+        _error = error.toString().replaceFirst('StateError: ', '');
+        _loading = false;
+      });
+    }
   }
 
   Future<void> _runSearch(bool online) async {
@@ -42,6 +79,7 @@ class _SearchScreenState extends State<SearchScreen> {
     setState(() {
       _loading = true;
       _error = null;
+      _directNotice = null;
       _youtube = null;
       _youtubeUrl = null;
       _results = const <Track>[];
@@ -51,8 +89,12 @@ class _SearchScreenState extends State<SearchScreen> {
       final settings = context.read<ProviderSettingsService>();
       final search = _search ??= SearchService(settings);
 
-      var term = query;
       if (YouTubeService.isYouTubeUrl(query)) {
+        if (settings.youtubeDirect) {
+          await _startDirectDownload(query);
+          return;
+        }
+
         final key = settings.key(ProviderKind.youtube).trim();
         if (key.isEmpty || !settings.isEnabled(ProviderKind.youtube)) {
           setState(() {
@@ -65,7 +107,7 @@ class _SearchScreenState extends State<SearchScreen> {
 
         final video = await YouTubeService(key).resolve(query);
         if (!mounted) return;
-        term = video.searchQuery;
+        final term = video.searchQuery;
         if (term.isEmpty) {
           setState(() {
             _error = 'El video no tiene un titulo utilizable para buscar';
@@ -77,9 +119,17 @@ class _SearchScreenState extends State<SearchScreen> {
           _youtube = video;
           _youtubeUrl = query;
         });
+
+        final results = await search.search(term);
+        if (!mounted) return;
+        setState(() {
+          _results = results;
+          _loading = false;
+        });
+        return;
       }
 
-      final results = await search.search(term);
+      final results = await search.search(query);
       if (!mounted) return;
       setState(() {
         _results = results;
@@ -228,6 +278,14 @@ class _SearchScreenState extends State<SearchScreen> {
                 ),
               ),
             ),
+            if (_directNotice != null)
+              Padding(
+                padding: const EdgeInsets.fromLTRB(12, 8, 12, 0),
+                child: Text(
+                  _directNotice!,
+                  style: const TextStyle(color: Colors.green, fontSize: 12),
+                ),
+              ),
             if (_youtube != null) _buildYouTubeCard(_youtube!, colors),
             if (_error != null)
               Padding(

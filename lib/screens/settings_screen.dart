@@ -188,6 +188,36 @@ class SettingsScreen extends StatelessWidget {
         ),
         const Divider(),
         Text(
+          'Opciones experimentales',
+          style: Theme.of(context).textTheme.titleMedium,
+        ),
+        Consumer<ProviderSettingsService>(
+          builder: (context, settings, _) => Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              SwitchListTile(
+                secondary: const Icon(Icons.download_for_offline),
+                title: const Text('Descarga directa de YouTube'),
+                subtitle: const Text(
+                  'Extrae solo el audio del video. Usalo solo con musica '
+                  'propia o con licencia.',
+                ),
+                value: settings.youtubeDirect,
+                onChanged: settings.setYoutubeDirect,
+              ),
+              const Padding(
+                padding: EdgeInsets.symmetric(horizontal: 16, vertical: 4),
+                child: Text(
+                  'Si lo desactivas, los links de YouTube buscan la cancion '
+                  'en fuentes legales con la API key.',
+                  style: TextStyle(fontSize: 12),
+                ),
+              ),
+            ],
+          ),
+        ),
+        const Divider(),
+        Text(
           'Formato de descarga',
           style: Theme.of(context).textTheme.titleMedium,
         ),
