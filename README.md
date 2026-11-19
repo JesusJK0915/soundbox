@@ -192,3 +192,17 @@ El workflow crea `android/key.properties` automaticamente.
 - Los workflows ejecutan `flutter create --platforms=android .` para generar el
   wrapper de Gradle y los recursos que no se versionan.
 - `just_audio` muestra la notificacion de reproduccion en segundo plano.
+
+## Funciones avanzadas incluidas
+
+- Estadisticas de escucha, racha diaria y exportacion CSV.
+- Letras automaticas con LRCLIB y resaltado karaoke.
+- Crossfade, gapless, velocidad, temporizador y repeticion de cola.
+- Busqueda, filtros, orden, cuadricula y seleccion multiple.
+- Pestana Herramientas con duplicados, playlists, ecualizador y normalizacion.
+- Exportacion M3U/CSV/JSON y guardado seguro con SAF.
+- Material You desde la caratula, metadatos automaticos y escaneo al iniciar.
+- Atajos de teclado, deslizamiento, doble toque y letra incrustada.
+
+La interfaz se mantiene sin animaciones ni dock flotante para garantizar que
+el cuerpo de la aplicacion siempre sea visible.
