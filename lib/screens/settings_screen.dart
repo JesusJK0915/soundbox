@@ -158,6 +158,34 @@ class SettingsScreen extends StatelessWidget {
           },
         ),
         const Divider(),
+        Text(
+          'Biblioteca',
+          style: Theme.of(context).textTheme.titleMedium,
+        ),
+        ListTile(
+          leading: const Icon(Icons.edit_note),
+          title: const Text('Leer metadatos de los archivos'),
+          subtitle: const Text(
+            'Actualiza artista, álbum, carátula y otros datos de las '
+            'canciones locales.',
+          ),
+          onTap: () async {
+            final count = await context
+                .read<LibraryService>()
+                .refreshMetadata(force: true);
+            if (!context.mounted) return;
+            ScaffoldMessenger.of(context).showSnackBar(
+              SnackBar(
+                content: Text(
+                  count == 0
+                      ? 'No habia nada que actualizar'
+                      : '$count cancion(es) actualizada(s)',
+                ),
+              ),
+            );
+          },
+        ),
+        const Divider(),
         const ListTile(
           leading: Icon(Icons.gavel),
           title: Text('Fuentes legales'),

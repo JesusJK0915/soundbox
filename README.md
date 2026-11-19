@@ -16,6 +16,25 @@ Tu PC solo sirve para escribir codigo y hacer `push`.
 - **Escanea una carpeta** e importa toda la musica que encuentre.
 - **Guardar en otro lugar**: exporta una canción o toda la biblioteca a la carpeta que elijas (Descargas, Drive, etc.).
 - **Material You**: usa los colores del fondo de pantalla del teléfono en toda la app y en el reproductor.
+- **Metadatos**: lee artista, álbum, carátula, año, género, pista, bitrate y más de los archivos de audio.
+
+## Metadatos y carátulas
+
+Al importar o escanear música (y también al terminar una descarga), SoundBox
+lee las etiquetas del archivo con `audio_metadata_reader`: ID3v1/v2 en MP3,
+Vorbis comments en FLAC/OGG/Opus y `ilst` en M4A. Se guardan título, artista,
+artista del álbum, álbum, año, género, número de pista/disco, duración, bitrate,
+frecuencia, letra e intérpretes. La carátula incrustada se extrae y se muestra
+en la biblioteca, el mini reproductor y la pantalla completa.
+
+Las pistas importadas antes de esta versión se actualizan automáticamente en
+segundo plano al abrir la app. También puedes forzar la lectura en
+**Ajustes → Biblioteca → Leer metadatos de los archivos**. En la biblioteca,
+el menú de cada canción tiene **Ver metadatos**, y el reproductor muestra un
+botón de información con todos los campos.
+
+Si un archivo no tiene etiquetas, se conservan el nombre del archivo y los
+datos de la fuente.
 
 ## Colores del fondo de pantalla
 

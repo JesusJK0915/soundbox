@@ -5,6 +5,8 @@ import '../core/export_service.dart';
 import '../core/library_service.dart';
 import '../core/models.dart';
 import '../player/player_service.dart';
+import '../widgets/track_artwork.dart';
+import '../widgets/track_details_sheet.dart';
 
 class LibraryScreen extends StatelessWidget {
   const LibraryScreen({super.key});
@@ -33,14 +35,25 @@ class LibraryScreen extends StatelessWidget {
           itemBuilder: (context, index) {
             final track = tracks[index];
             return ListTile(
-              leading: const CircleAvatar(child: Icon(Icons.audiotrack)),
+              leading: ClipOval(
+                child: SizedBox(
+                  width: 42,
+                  height: 42,
+                  child: TrackArtwork(track: track, iconSize: 20),
+                ),
+              ),
               title: Text(
                 track.title,
                 maxLines: 1,
                 overflow: TextOverflow.ellipsis,
               ),
               subtitle: Text(
-                '${track.artist}${track.subtitlePath != null ? ' · SUB' : ''}',
+                [
+                  track.artist,
+                  if (track.album != null && track.album!.isNotEmpty)
+                    track.album!,
+                  if (track.subtitlePath != null) 'SUB',
+                ].join(' · '),
                 maxLines: 1,
                 overflow: TextOverflow.ellipsis,
               ),
@@ -59,11 +72,16 @@ class LibraryScreen extends StatelessWidget {
                     }
                     return;
                   }
+                  if (value == 'details') {
+                    await showTrackDetails(context, track);
+                    return;
+                  }
                   if (value == 'export') {
                     await _saveTrack(context, track);
                   }
                 },
                 itemBuilder: (context) => const [
+                  PopupMenuItem(value: 'details', child: Text('Ver metadatos')),
                   PopupMenuItem(
                     value: 'export',
                     child: Text('Guardar en otro lugar'),

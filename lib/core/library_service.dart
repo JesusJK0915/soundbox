@@ -8,6 +8,7 @@ import 'package:permission_handler/permission_handler.dart';
 import 'package:path_provider/path_provider.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
+import 'metadata_service.dart';
 import 'models.dart';
 
 const _videoFormats = <String>{
@@ -42,6 +43,7 @@ class LibraryService extends ChangeNotifier {
   late final Directory audioDir;
   late final Directory downloadDir;
   late final Directory subtitleDir;
+  late final Directory artworkDir;
 
   final List<Track> _tracks = <Track>[];
 
@@ -57,8 +59,9 @@ class LibraryService extends ChangeNotifier {
     audioDir = Directory(p.join(rootDir.path, 'audio'));
     downloadDir = Directory(p.join(rootDir.path, 'downloads'));
     subtitleDir = Directory(p.join(rootDir.path, 'subtitles'));
+    artworkDir = Directory(p.join(rootDir.path, 'artwork'));
 
-    for (final dir in [audioDir, downloadDir, subtitleDir]) {
+    for (final dir in [audioDir, downloadDir, subtitleDir, artworkDir]) {
       await dir.create(recursive: true);
     }
 
@@ -175,22 +178,7 @@ class LibraryService extends ChangeNotifier {
     );
     await File(sourcePath).copy(target);
 
-    final old = _tracks[index];
-    _tracks[index] = Track(
-      id: old.id,
-      title: old.title,
-      artist: old.artist,
-      album: old.album,
-      artworkUrl: old.artworkUrl,
-      sourceUrl: old.sourceUrl,
-      isLocal: old.isLocal,
-      format: old.format,
-      durationMs: old.durationMs,
-      license: old.license,
-      subtitlePath: target,
-      downloaded: old.downloaded,
-      source: old.source,
-    );
+    _tracks[index] = _tracks[index].copyWith(subtitlePath: target);
     await _persist();
   }
 
@@ -221,6 +209,13 @@ class LibraryService extends ChangeNotifier {
       }
     } catch (_) {}
 
+    try {
+      if (track.artworkPath != null) {
+        final artwork = File(track.artworkPath!);
+        if (await artwork.exists()) await artwork.delete();
+      }
+    } catch (_) {}
+
     _tracks.removeAt(index);
     await _persist();
   }
@@ -241,7 +236,7 @@ class LibraryService extends ChangeNotifier {
     final target = File(p.join(targetDir.path, name));
     await source.copy(target.path);
 
-    final track = Track(
+    final base = Track(
       id: target.path,
       title: titleOverride ?? p.basenameWithoutExtension(sourcePath),
       artist: downloaded ? 'Descargado' : 'Local',
@@ -252,8 +247,51 @@ class LibraryService extends ChangeNotifier {
       artworkUrl: artworkUrl,
       downloaded: downloaded,
     );
+    final track = await _withMetadata(base);
     await addTrack(track);
     return track;
+  }
+
+  /// Combina la pista con las etiquetas leidas del archivo.
+  Future<Track> _withMetadata(Track base) async {
+    final meta = await readTrackMetadata(
+      filePath: base.sourceUrl,
+      artworkDir: artworkDir.path,
+    );
+    if (meta == null) return base.copyWith(tagsRead: true);
+    return base.copyWith(
+      title: meta.title ?? base.title,
+      artist: meta.artist ?? base.artist,
+      album: meta.album ?? base.album,
+      albumArtist: meta.albumArtist,
+      year: meta.year,
+      genre: meta.genre,
+      trackNumber: meta.trackNumber,
+      trackTotal: meta.trackTotal,
+      discNumber: meta.discNumber,
+      durationMs: meta.durationMs ?? base.durationMs,
+      bitrateBps: meta.bitrateBps,
+      sampleRate: meta.sampleRate,
+      artworkPath: meta.artworkPath ?? base.artworkPath,
+      extraTags: meta.extraTags.isEmpty ? null : meta.extraTags,
+      tagsRead: true,
+    );
+  }
+
+  /// Vuelve a leer las etiquetas de la biblioteca local. Por defecto solo
+  /// procesa las pistas que aun no tienen metadatos leidos.
+  Future<int> refreshMetadata({bool force = false}) async {
+    var updated = 0;
+    for (var index = 0; index < _tracks.length; index++) {
+      final track = _tracks[index];
+      if (!track.isLocal || track.isSubtitle) continue;
+      if (track.tagsRead && !force) continue;
+      if (!File(track.sourceUrl).existsSync()) continue;
+      _tracks[index] = await _withMetadata(track);
+      updated++;
+    }
+    if (updated > 0) await _persist();
+    return updated;
   }
 
   Future<Track> addDownloadedFile({
@@ -266,7 +304,7 @@ class LibraryService extends ChangeNotifier {
     final target = sourcePath;
     final extension = p.extension(sourcePath);
 
-    final track = Track(
+    final base = Track(
       id: target,
       title: title,
       artist: artist,
@@ -277,6 +315,7 @@ class LibraryService extends ChangeNotifier {
       artworkUrl: artworkUrl,
       downloaded: true,
     );
+    final track = await _withMetadata(base);
     await addTrack(track);
     return track;
   }

@@ -6,6 +6,8 @@ import '../core/models.dart';
 import '../core/player_theme.dart';
 import '../player/player_service.dart';
 import '../widgets/subtitle_overlay.dart';
+import '../widgets/track_artwork.dart';
+import '../widgets/track_details_sheet.dart';
 
 class PlayerScreen extends StatelessWidget {
   const PlayerScreen({super.key});
@@ -48,6 +50,11 @@ class PlayerScreen extends StatelessWidget {
               ),
               title: const Text('Suena ahora'),
               actions: [
+                IconButton(
+                  tooltip: 'Detalles de la canción',
+                  icon: const Icon(Icons.info_outline_rounded),
+                  onPressed: () => showTrackDetails(context, track),
+                ),
                 Padding(
                   padding: const EdgeInsets.only(right: 20),
                   child: _PlayingBars(isPlaying: player.isPlaying),
@@ -259,21 +266,7 @@ class _HeroArtwork extends StatelessWidget {
                   ),
                 ],
               ),
-              child: track.artworkUrl == null
-                  ? Icon(
-                      Icons.music_note_rounded,
-                      size: 104,
-                      color: scheme.onSecondaryContainer,
-                    )
-                  : Image.network(
-                      track.artworkUrl!,
-                      fit: BoxFit.cover,
-                      errorBuilder: (_, __, ___) => Icon(
-                        Icons.music_note_rounded,
-                        size: 104,
-                        color: scheme.onSecondaryContainer,
-                      ),
-                    ),
+              child: TrackArtwork(track: track, iconSize: 104),
             ),
           ),
         );
@@ -334,6 +327,16 @@ class _MetaChips extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final chips = <Widget>[
+      if (track.year != null) _chip(Icons.calendar_today, '${track.year}'),
+      if (track.genre != null && track.genre!.isNotEmpty)
+        _chip(Icons.music_note, track.genre!),
+      if (track.trackNumber != null)
+        _chip(Icons.format_list_numbered, '#${track.trackNumber}'),
+      if (track.bitrateBps != null && track.bitrateBps! > 0)
+        _chip(
+          Icons.speed,
+          '${(track.bitrateBps! / 1000).round()} kbps',
+        ),
       if (track.format != null && track.format!.isNotEmpty)
         _chip(Icons.audio_file, track.format!.toUpperCase()),
       if (track.source != null && track.source!.isNotEmpty)

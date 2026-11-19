@@ -4,6 +4,7 @@ import 'package:provider/provider.dart';
 import '../core/player_theme.dart';
 import '../player/player_service.dart';
 import '../screens/player_screen.dart';
+import 'track_artwork.dart';
 
 class MiniPlayer extends StatelessWidget {
   const MiniPlayer({super.key});
@@ -52,12 +53,11 @@ class MiniPlayer extends StatelessWidget {
                       children: [
                         Hero(
                           tag: playerArtHeroTag(track),
-                          child: CircleAvatar(
-                            radius: 23,
-                            backgroundColor: scheme.primary,
-                            child: Icon(
-                              Icons.music_note_rounded,
-                              color: scheme.onPrimary,
+                          child: ClipOval(
+                            child: SizedBox(
+                              width: 46,
+                              height: 46,
+                              child: TrackArtwork(track: track, iconSize: 22),
                             ),
                           ),
                         ),

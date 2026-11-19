@@ -11,6 +11,7 @@ import '../core/providers.dart';
 import '../core/search_service.dart';
 import '../core/youtube_direct_service.dart';
 import '../core/youtube_service.dart';
+import '../widgets/track_artwork.dart';
 
 class SearchScreen extends StatefulWidget {
   const SearchScreen({super.key});
@@ -305,13 +306,12 @@ class _SearchScreenState extends State<SearchScreen> {
                       itemBuilder: (context, index) {
                         final track = _results[index];
                         return ListTile(
-                          leading: CircleAvatar(
-                            backgroundImage: track.artworkUrl == null
-                                ? null
-                                : NetworkImage(track.artworkUrl!),
-                            child: track.artworkUrl == null
-                                ? const Icon(Icons.music_note)
-                                : null,
+                          leading: ClipOval(
+                            child: SizedBox(
+                              width: 42,
+                              height: 42,
+                              child: TrackArtwork(track: track, iconSize: 20),
+                            ),
                           ),
                           title: Text(
                             track.title,

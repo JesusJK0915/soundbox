@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'dart:io';
 
 import 'package:audio_session/audio_session.dart';
@@ -56,6 +57,10 @@ Future<void> main() async {
       themeSettings: themeSettings,
     ),
   );
+
+  // Las pistas importadas en versiones anteriores se enriquecen en segundo
+  // plano para no retrasar el arranque.
+  unawaited(library.refreshMetadata());
 }
 
 class SoundBoxApp extends StatefulWidget {
