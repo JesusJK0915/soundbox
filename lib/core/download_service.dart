@@ -40,6 +40,7 @@ class DownloadService extends ChangeNotifier {
       title: track.title,
       url: track.sourceUrl,
       savePath: savePath,
+      track: track,
       cancelToken: CancelToken(),
     );
     _tasks.insert(0, task);

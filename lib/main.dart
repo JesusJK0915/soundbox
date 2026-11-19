@@ -1,5 +1,8 @@
+import 'dart:io';
+
 import 'package:audio_session/audio_session.dart';
 import 'package:flutter/material.dart';
+import 'package:permission_handler/permission_handler.dart';
 import 'package:provider/provider.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
@@ -12,6 +15,10 @@ import 'screens/home_screen.dart';
 
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
+
+  if (Platform.isAndroid) {
+    await Permission.notification.request();
+  }
 
   final prefs = await SharedPreferences.getInstance();
   final library = LibraryService(prefs);

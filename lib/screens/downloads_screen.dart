@@ -52,14 +52,7 @@ class DownloadsScreen extends StatelessWidget {
                       task.status == DownloadStatus.failed)
                     IconButton(
                       icon: const Icon(Icons.play_arrow),
-                      onPressed: () {
-                        final library = context.read<LibraryService>();
-                        final source = library.tracks.cast<Track?>().firstWhere(
-                              (track) => track?.id == task.id,
-                              orElse: () => null,
-                            );
-                        if (source != null) downloads.start(source);
-                      },
+                      onPressed: () => downloads.start(task.track),
                     ),
                   IconButton(
                     icon: const Icon(Icons.delete_outline),

@@ -63,7 +63,6 @@ class LibraryService extends ChangeNotifier {
       await _copyToLibrary(
         sourcePath: path,
         targetDir: video ? videoDir : audioDir,
-        video: video,
         downloaded: false,
       );
     }
@@ -142,7 +141,6 @@ class LibraryService extends ChangeNotifier {
   Future<Track?> _copyToLibrary({
     required String sourcePath,
     required Directory targetDir,
-    required bool video,
     required bool downloaded,
     String? titleOverride,
     String? license,
@@ -178,13 +176,8 @@ class LibraryService extends ChangeNotifier {
     String? license,
     String? artworkUrl,
   }) async {
+    final target = sourcePath;
     final extension = p.extension(sourcePath);
-    final target = p.join(
-      downloadDir.path,
-      '${DateTime.now().microsecondsSinceEpoch}$extension',
-    );
-    final existing = File(sourcePath);
-    if (existing.path != target) await existing.copy(target);
 
     final track = Track(
       id: target,

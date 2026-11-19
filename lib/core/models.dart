@@ -78,6 +78,7 @@ class DownloadTask {
   final String title;
   final String url;
   final String savePath;
+  final Track track;
   final CancelToken cancelToken;
   DownloadStatus status;
   double progress;
@@ -88,6 +89,7 @@ class DownloadTask {
     required this.title,
     required this.url,
     required this.savePath,
+    required this.track,
     required this.cancelToken,
     this.status = DownloadStatus.queued,
     this.progress = 0,
