@@ -135,17 +135,13 @@ class UpdateService extends ChangeNotifier {
       final abi = await deviceAbi();
       final response = await _dio.get<List<dynamic>>(
         '/repos/$updateOwner/$updateRepo/releases',
-        queryParameters: <String, dynamic>{'per_page': 30},
+        queryParameters: <String, dynamic>{'per_page': 100},
       );
       final releases = response.data ?? <dynamic>[];
 
-      UpdateRelease? found;
-      for (final item in releases) {
-        final parsed = parseRelease(item, _channel, abi);
-        if (parsed == null) continue;
-        found = parsed;
-        break;
-      }
+      // GitHub no garantiza que /releases venga ordenado por numero de
+      // version, asi que se elige el build mas alto del canal.
+      final found = pickLatest(releases, _channel, abi);
 
       if (found == null) {
         _status = UpdateStatus.error;
@@ -275,6 +271,21 @@ class UpdateService extends ChangeNotifier {
     if (normalized.contains('arm64')) return 'app-arm64-v8a-release.apk';
     if (normalized.contains('x86_64')) return 'app-x86_64-release.apk';
     return 'app-armeabi-v7a-release.apk';
+  }
+
+  /// Elige el release con el build mas alto, sin depender del orden de la API.
+  static UpdateRelease? pickLatest(
+    Iterable<dynamic> values,
+    UpdateChannel channel,
+    String abi,
+  ) {
+    UpdateRelease? best;
+    for (final value in values) {
+      final parsed = parseRelease(value, channel, abi);
+      if (parsed == null) continue;
+      if (best == null || parsed.buildNumber > best.buildNumber) best = parsed;
+    }
+    return best;
   }
 
   static UpdateRelease? parseRelease(

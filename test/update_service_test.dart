@@ -78,5 +78,20 @@ void main() {
       );
       expect(release, isNull);
     });
+
+    test('elige el build mas alto aunque la API no venga ordenada', () {
+      final latest = UpdateService.pickLatest(
+        [
+          releaseJson('v0.2.0-beta.9', ['app-arm64-v8a-release.apk']),
+          releaseJson('v0.2.0-beta.23', ['app-arm64-v8a-release.apk']),
+          releaseJson('v0.2.0-beta.22', ['app-arm64-v8a-release.apk']),
+        ],
+        UpdateChannel.beta,
+        'arm64-v8a',
+      );
+
+      expect(latest, isNotNull);
+      expect(latest!.tag, 'v0.2.0-beta.23');
+    });
   });
 }
