@@ -70,28 +70,34 @@ class UserPreferencesService extends ChangeNotifier {
       UserPreferencesService(await SharedPreferences.getInstance());
 
   List<String> _readList(String key) {
-    final raw = _prefs?.getStringList(key);
-    if (raw != null) return raw;
-    final encoded = _prefs?.getString(key);
-    if (encoded == null) return const <String>[];
-    try {
-      final decoded = jsonDecode(encoded);
-      if (decoded is List) {
-        return decoded.map((value) => value.toString()).toList();
-      }
-    } catch (_) {}
+    final stored = _prefs?.get(key);
+    if (stored is List) {
+      return stored.map((value) => value.toString()).toList();
+    }
+    if (stored is String) {
+      try {
+        final decoded = jsonDecode(stored);
+        if (decoded is List) {
+          return decoded.map((value) => value.toString()).toList();
+        }
+      } catch (_) {}
+    }
     return const <String>[];
   }
 
   Map<String, dynamic> _readMap(String key) {
-    final encoded = _prefs?.getString(key);
-    if (encoded == null) return <String, dynamic>{};
-    try {
-      final decoded = jsonDecode(encoded);
-      if (decoded is Map) {
-        return decoded.map((key, value) => MapEntry(key.toString(), value));
-      }
-    } catch (_) {}
+    final stored = _prefs?.get(key);
+    if (stored is String) {
+      try {
+        final decoded = jsonDecode(stored);
+        if (decoded is Map) {
+          return decoded.map((key, value) => MapEntry(key.toString(), value));
+        }
+      } catch (_) {}
+    }
+    if (stored is Map) {
+      return stored.map((key, value) => MapEntry(key.toString(), value));
+    }
     return <String, dynamic>{};
   }
 
