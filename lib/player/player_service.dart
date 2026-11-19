@@ -4,6 +4,9 @@ import 'package:flutter/foundation.dart';
 import 'package:just_audio/just_audio.dart';
 
 import '../core/connectivity_service.dart';
+import '../core/library_service.dart';
+import '../core/listening_stats.dart';
+import '../core/lyrics_service.dart';
 import '../core/models.dart';
 import '../core/user_preferences.dart';
 
@@ -14,19 +17,31 @@ class PlayerService extends ChangeNotifier {
   final AudioPlayer _player = AudioPlayer();
   final ConnectivityService _connectivity;
   final UserPreferencesService? _prefs;
+  final LibraryService? _library;
+  final LyricsService? _lyrics;
+  final ListeningStatsService? _stats;
 
   List<Track> _queue = <Track>[];
   int _index = 0;
   bool _shuffle = false;
   LoopMode _loopMode = LoopMode.off;
   double _speed = 1;
+  final Set<String> _lyricsRequested = <String>{};
 
   Timer? _sleepTimer;
   Timer? _sleepTicker;
   Duration? _sleepRemaining;
   int _lastSavedMs = 0;
+  int _listeningSeconds = 0;
+  DateTime? _lastListeningTick;
 
-  PlayerService(this._connectivity, [this._prefs]) {
+  PlayerService(
+    this._connectivity, [
+    this._prefs,
+    this._library,
+    this._lyrics,
+    this._stats,
+  ]) {
     _player.playerStateStream.listen((_) => notifyListeners());
     _player.positionStream.listen((position) {
       // Guarda la posición cada 5 s para reanudar después de reiniciar.
@@ -37,6 +52,21 @@ class PlayerService extends ChangeNotifier {
           unawaited(_prefs?.savePosition(track.id, position));
         }
       }
+      if (_player.playing) {
+        final now = DateTime.now();
+        final last = _lastListeningTick;
+        if (last != null) {
+          _listeningSeconds += now.difference(last).inSeconds;
+        }
+        _lastListeningTick = now;
+        if (_listeningSeconds >= 60) {
+          final seconds = _listeningSeconds;
+          _listeningSeconds = 0;
+          unawaited(_stats?.addListeningTime(Duration(seconds: seconds)));
+        }
+      } else {
+        _lastListeningTick = null;
+      }
       notifyListeners();
     });
     _player.durationStream.listen((_) => notifyListeners());
@@ -44,9 +74,23 @@ class PlayerService extends ChangeNotifier {
       if (index != null && index < _queue.length) {
         _index = index;
         _lastSavedMs = 0;
+        _maybeFetchLyrics();
         notifyListeners();
       }
     });
+
+    final prefs = _prefs;
+    if (prefs != null) {
+      if (prefs.queueRepeat) _loopMode = LoopMode.all;
+      if (prefs.rememberShuffle) {
+        _shuffle = prefs.getBool('player.shuffle_saved');
+      }
+      if (prefs.rememberSpeed) {
+        final saved = prefs.getDouble('player.speed_saved');
+        if (saved != null) _speed = saved;
+      }
+      unawaited(_player.setVolume(prefs.volume));
+    }
 
     _connectivity.addListener(() {
       if (_connectivity.isOnline) return;
@@ -59,6 +103,71 @@ class PlayerService extends ChangeNotifier {
         stop();
       }
     });
+  }
+
+  void _rememberPlaybackSettings() {
+    final prefs = _prefs;
+    if (prefs == null) return;
+    if (prefs.rememberShuffle) prefs.setBool('player.shuffle_saved', _shuffle);
+    if (prefs.rememberSpeed) prefs.setDouble('player.speed_saved', _speed);
+  }
+
+  /// Atenúa el volumen antes de cambiar de pista cuando el crossfade está activo.
+  Future<void> _crossfadeIfNeeded() async {
+    final prefs = _prefs;
+    if (!crossfade || prefs == null) return;
+    final target = prefs.volume;
+    for (var step = 1; step <= 4; step++) {
+      await _player.setVolume(target * (1 - step / 4));
+      await Future<void>.delayed(const Duration(milliseconds: 70));
+    }
+  }
+
+  Future<void> _restoreVolume() async {
+    final prefs = _prefs;
+    if (prefs != null) await _player.setVolume(prefs.volume);
+  }
+
+  Stream<Duration> get positionStream => _player.positionStream;
+  Stream<PlayerState> get playerStateStream => _player.playerStateStream;
+  Stream<Duration?> get durationStream => _player.durationStream;
+
+  /// Busca letras en LRCLIB una vez por pista cuando no hay subtítulo local.
+  void _maybeFetchLyrics() {
+    final prefs = _prefs;
+    final library = _library;
+    final lyrics = _lyrics;
+    final track = currentTrack;
+    if (prefs == null || library == null || lyrics == null || track == null) {
+      return;
+    }
+    if (!prefs.autoLyrics || track.subtitlePath != null) return;
+    if (!_connectivity.isOnline) return;
+    if (prefs.lowData && !track.isLocal) return;
+    if (!_lyricsRequested.add(track.id)) return;
+    unawaited(_downloadLyrics(track));
+  }
+
+  Future<void> _downloadLyrics(Track track) async {
+    final result = await lyricsServiceFor(track);
+    if (result == null) return;
+    final content = result.lrcContent;
+    if (content == null) return;
+    await _library?.attachLyrics(track.id, content);
+  }
+
+  Future<LyricsResult?> lyricsServiceFor(Track track) async {
+    final lyrics = _lyrics;
+    if (lyrics == null) return null;
+    return lyrics.fetch(track);
+  }
+
+  /// Fuerza una búsqueda de letra para la pista actual.
+  Future<LyricsResult?> refreshLyrics() async {
+    final track = currentTrack;
+    final lyrics = _lyrics;
+    if (track == null || lyrics == null) return null;
+    return lyrics.fetch(track);
   }
 
   Track? get currentTrack => _queue.isEmpty
@@ -92,12 +201,39 @@ class PlayerService extends ChangeNotifier {
       initialIndex: _index,
       initialPosition: saved,
     );
+    await _applyAudioSettings();
+    unawaited(_prefs?.registerPlay(selected.id));
+    unawaited(_prefs?.recordPlayback(selected.id));
+    _maybeFetchLyrics();
+    await _player.play();
+    notifyListeners();
+  }
+
+  /// Restaura una cola guardada a partir de los IDs de las pistas.
+  /// Devuelve cuántas pistas se pudieron recuperar de la biblioteca actual.
+  Future<int> restoreQueueByIds(
+    Iterable<String> ids,
+    Iterable<Track> available,
+  ) async {
+    final byId = <String, Track>{for (final track in available) track.id: track};
+    final restored = <Track>[];
+    for (final id in ids) {
+      final track = byId[id];
+      if (track != null) restored.add(track);
+    }
+    if (restored.isEmpty) return 0;
+    await setQueue(restored);
+    return restored.length;
+  }
+
+  Future<void> _applyAudioSettings() async {
     await _player.setLoopMode(_loopMode);
     await _player.setShuffleModeEnabled(_shuffle);
     await _player.setSpeed(_speed);
-    unawaited(_prefs?.registerPlay(selected.id));
-    await _player.play();
-    notifyListeners();
+    final prefs = _prefs;
+    if (prefs != null) {
+      await _player.setVolume(prefs.volume);
+    }
   }
 
   /// Reproduce toda la lista desde el principio (o en aleatorio).
@@ -121,6 +257,8 @@ class PlayerService extends ChangeNotifier {
     _lastSavedMs = saved.inMilliseconds;
     await _player.seek(saved, index: index);
     unawaited(_prefs?.registerPlay(selected.id));
+    unawaited(_prefs?.recordPlayback(selected.id));
+    _maybeFetchLyrics();
     await _player.play();
     notifyListeners();
   }
@@ -201,21 +339,86 @@ class PlayerService extends ChangeNotifier {
   Future<void> pause() => _player.pause();
   Future<void> stop() => _player.stop();
   Future<void> seek(Duration position) => _player.seek(position);
-  Future<void> setVolume(double volume) => _player.setVolume(volume);
+
+  Future<void> setVolume(double volume) async {
+    await _player.setVolume(volume);
+    await _prefs?.setVolume(volume);
+  }
+
+  /// Guarda la cola actual para restaurarla al reiniciar.
+  Future<void> persistQueue() async {
+    final ids = _queue.map((track) => track.id).toList();
+    await _prefs?.setCustomQueue(ids);
+    await _prefs?.recordQueue(ids);
+  }
+
+  /// Reordena la cola de forma aleatoria (o sesgada a favoritas).
+  Future<void> shuffleQueue() async {
+    final prefs = _prefs;
+    if (prefs == null || _queue.isEmpty) return;
+    final current = currentTrack;
+    final rest = List<Track>.from(_queue)..removeWhere((track) => track == current);
+    if (prefs.shuffleBiased) {
+      rest.sort((a, b) {
+        final scoreA = (prefs.isFavorite(a.id) ? 1 : 0) + prefs.playCount(a.id);
+        final scoreB = (prefs.isFavorite(b.id) ? 1 : 0) + prefs.playCount(b.id);
+        return scoreB.compareTo(scoreA);
+      });
+    }
+    rest.shuffle();
+    final ordered = <Track>[if (current != null) current, ...rest];
+    await setQueue(ordered, index: 0);
+    await persistQueue();
+  }
+
+  /// Opciones de audio avanzadas (crossfade/gapless) para la interfaz.
+  bool get crossfade => _prefs?.crossfade ?? false;
+  bool get gapless => _prefs?.gapless ?? true;
+
+  Future<void> setCrossfade(bool value) async {
+    await _prefs?.setCrossfade(value);
+    notifyListeners();
+  }
+
+  Future<void> setGaplessWithRestart(bool value) async {
+    await setGapless(value);
+    final current = currentTrack;
+    if (current == null || _queue.isEmpty) return;
+    final saved = _player.position;
+    final sources = _queue
+        .map((track) => AudioSource.uri(_uriFor(track), tag: track))
+        .toList();
+    await _player.setAudioSource(
+      ConcatenatingAudioSource(children: sources),
+      initialIndex: _index,
+      initialPosition: saved,
+    );
+    await _applyAudioSettings();
+  }
+
+  Future<void> setGapless(bool value) async {
+    await _prefs?.setGapless(value);
+    notifyListeners();
+  }
 
   Future<void> skipNext() async {
+    await _crossfadeIfNeeded();
     await _player.seekToNext();
+    await _restoreVolume();
     await _player.play();
   }
 
   Future<void> skipPrevious() async {
+    await _crossfadeIfNeeded();
     await _player.seekToPrevious();
+    await _restoreVolume();
     await _player.play();
   }
 
   Future<void> toggleShuffle() async {
     _shuffle = !_shuffle;
     await _player.setShuffleModeEnabled(_shuffle);
+    _rememberPlaybackSettings();
     notifyListeners();
   }
 
@@ -240,6 +443,7 @@ class PlayerService extends ChangeNotifier {
   Future<void> setSpeed(double value) async {
     _speed = value;
     await _player.setSpeed(value);
+    _rememberPlaybackSettings();
     notifyListeners();
   }
 
@@ -251,7 +455,9 @@ class PlayerService extends ChangeNotifier {
     cancelSleepTimer(notify: false);
     _sleepRemaining = duration;
     _sleepTimer = Timer(duration, () async {
+      if (_prefs?.sleepFade ?? false) await _crossfadeIfNeeded();
       await _player.pause();
+      await _restoreVolume();
       cancelSleepTimer();
     });
     _sleepTicker = Timer.periodic(const Duration(seconds: 1), (_) {
@@ -271,7 +477,9 @@ class PlayerService extends ChangeNotifier {
     _sleepTimer?.cancel();
     _sleepRemaining = (_sleepRemaining ?? Duration.zero) + extra;
     _sleepTimer = Timer(_sleepRemaining!, () async {
+      if (_prefs?.sleepFade ?? false) await _crossfadeIfNeeded();
       await _player.pause();
+      await _restoreVolume();
       cancelSleepTimer();
     });
     notifyListeners();
