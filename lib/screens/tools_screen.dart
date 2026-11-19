@@ -3,6 +3,7 @@ import 'package:provider/provider.dart';
 
 import '../core/library_service.dart';
 import '../core/library_tools.dart';
+import '../core/playlist_export.dart';
 import '../core/models.dart';
 import '../core/user_preferences.dart';
 import '../player/player_service.dart';
@@ -201,6 +202,27 @@ class _PlaylistsTabState extends State<_PlaylistsTab> {
           leading: const Icon(Icons.playlist_add),
           title: const Text('Crear lista de reproducción'),
           onTap: () => _createDialog(context),
+        ),
+        ListTile(
+          leading: const Icon(Icons.file_download_outlined),
+          title: const Text('Exportar biblioteca (M3U)'),
+          subtitle: const Text(
+            'Guarda el resultado en los ajustes para compartirlo.',
+          ),
+          onTap: () async {
+            final content = context
+                .read<PlaylistExportService>()
+                .toM3u(library.playableTracks);
+            await context.read<PlaylistExportService>().rememberExport(content);
+            if (!context.mounted) return;
+            ScaffoldMessenger.of(context).showSnackBar(
+              SnackBar(
+                content: Text(
+                  'M3U generado con ${library.playableTracks.length} pista(s)',
+                ),
+              ),
+            );
+          },
         ),
         Expanded(
           child: tools.playlists.isEmpty

@@ -50,14 +50,14 @@ List<SubtitleCue> parseLrc(String content) {
   for (final line in normalized.split('\n')) {
     final matches = _lrcTime.allMatches(line).toList();
     if (matches.isEmpty) continue;
-    final start = _parseTime(
-      '0:${matches.first.group(1)!}:${matches.first.group(2)!}'
-      '.${(matches.first.group(3) ?? '0').padRight(3, '0').substring(0, 3)}',
-    );
     final textStart = matches.last.end;
     final text = line.substring(textStart).trim();
     if (text.isEmpty) continue;
-    for (final _ in matches) {
+    for (final match in matches) {
+      final start = _parseTime(
+        '0:${match.group(1)!}:${match.group(2)!}'
+        '.${(match.group(3) ?? '0').padRight(3, '0').substring(0, 3)}',
+      );
       raw.add(SubtitleCue(start: start, end: start, text: text));
     }
   }
