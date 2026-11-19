@@ -21,7 +21,7 @@ class MiniPlayer extends StatelessWidget {
             : (player.position.inMicroseconds / duration.inMicroseconds)
                 .clamp(0.0, 1.0)
                 .toDouble();
-        final scheme = playerColorScheme(track, Theme.of(context).brightness);
+        final scheme = playerSchemeFor(context, track);
 
         return Padding(
           padding: const EdgeInsets.fromLTRB(10, 4, 10, 8),

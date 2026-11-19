@@ -7,6 +7,7 @@ import '../core/download_settings.dart';
 import '../core/export_service.dart';
 import '../core/library_service.dart';
 import '../core/providers.dart';
+import '../core/theme_settings.dart';
 
 class SettingsScreen extends StatelessWidget {
   const SettingsScreen({super.key});
@@ -120,6 +121,41 @@ class SettingsScreen extends StatelessWidget {
               connectivity.isOnline ? 'Conectado' : 'Modo offline',
             ),
           ),
+        ),
+        const Divider(),
+        Text(
+          'Apariencia',
+          style: Theme.of(context).textTheme.titleMedium,
+        ),
+        Consumer<ThemeSettingsService>(
+          builder: (context, theme, _) {
+            final available = WallpaperColors.maybeOf(context)?.dark != null;
+            return Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                SwitchListTile(
+                  secondary: const Icon(Icons.palette_outlined),
+                  title: const Text('Colores del fondo de pantalla'),
+                  subtitle: Text(
+                    available
+                        ? 'Material You del sistema en toda la app.'
+                        : 'Material You del sistema. Este dispositivo no lo '
+                            'ofrece: se usa el color de respaldo.',
+                  ),
+                  value: theme.wallpaperColors,
+                  onChanged: theme.setWallpaperColors,
+                ),
+                const Padding(
+                  padding: EdgeInsets.symmetric(horizontal: 16, vertical: 4),
+                  child: Text(
+                    'Si lo desactivas, cada canción vuelve a usar su propia '
+                    'paleta. El cambio se aplica al instante.',
+                    style: TextStyle(fontSize: 12),
+                  ),
+                ),
+              ],
+            );
+          },
         ),
         const Divider(),
         const ListTile(

@@ -15,6 +15,19 @@ Tu PC solo sirve para escribir codigo y hacer `push`.
 - Pega un **link de YouTube** y extrae solo el audio (modo experimental).
 - **Escanea una carpeta** e importa toda la musica que encuentre.
 - **Guardar en otro lugar**: exporta una canción o toda la biblioteca a la carpeta que elijas (Descargas, Drive, etc.).
+- **Material You**: usa los colores del fondo de pantalla del teléfono en toda la app y en el reproductor.
+
+## Colores del fondo de pantalla
+
+En Android 12 o superior, SoundBox toma los colores del fondo de pantalla
+mediante `dynamic_color` y los aplica al tema global, al mini reproductor y a
+la pantalla completa. En dispositivos sin color dinámico se usa una paleta de
+respaldo.
+
+El interruptor **Ajustes → Apariencia → Colores del fondo de pantalla** permite
+activarlo o desactivarlo en cualquier momento; la elección se guarda en el
+dispositivo. Si lo desactivas, cada canción recupera su paleta determinista
+anterior.
 
 ## Formato y calidad de descarga
 

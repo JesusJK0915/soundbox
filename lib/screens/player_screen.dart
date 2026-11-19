@@ -17,7 +17,7 @@ class PlayerScreen extends StatelessWidget {
         final track = player.currentTrack;
         if (track == null) return const _EmptyPlayer();
 
-        final scheme = playerColorScheme(track, Theme.of(context).brightness);
+        final scheme = playerSchemeFor(context, track);
         final duration = player.duration ?? Duration.zero;
         final maxMs = duration.inMilliseconds < 1 ? 1 : duration.inMilliseconds;
         final currentMs = player.position.inMilliseconds.clamp(0, maxMs);
