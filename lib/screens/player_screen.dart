@@ -395,8 +395,8 @@ class _Progress extends StatelessWidget {
         Slider(
           value: currentMs.toDouble(),
           max: maxMs.toDouble(),
-          activeTrackColor: scheme.primary,
-          inactiveTrackColor: scheme.secondaryContainer,
+          activeColor: scheme.primary,
+          inactiveColor: scheme.secondaryContainer,
           thumbColor: scheme.primary,
           onChanged: (value) => onSeek(Duration(milliseconds: value.toInt())),
         ),
@@ -570,8 +570,8 @@ class _VolumeControlState extends State<_VolumeControl> {
           Expanded(
             child: Slider(
               value: _volume,
-              activeTrackColor: scheme.primary,
-              inactiveTrackColor: scheme.secondaryContainer,
+              activeColor: scheme.primary,
+              inactiveColor: scheme.secondaryContainer,
               thumbColor: scheme.primary,
               onChanged: _change,
             ),
