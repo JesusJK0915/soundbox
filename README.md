@@ -45,6 +45,50 @@ Tu PC solo sirve para escribir codigo y hacer `push`.
 - **Apariencia**: tema del sistema, claro u oscuro, respuesta háptica y gestos
   configurables en **Ajustes → Interfaz y gestos**.
 
+## Letras automáticas (LRCLIB)
+
+SoundBox puede encontrar letras sincronizadas para tus canciones usando
+[LRCLIB](https://lrclib.net), un servicio abierto y gratuito que no necesita
+clave:
+
+- **Búsqueda automática**: al cambiar de pista, si no tiene subtítulo y hay
+  conexión, se consulta LRCLIB y la letra se guarda como `.lrc` en la carpeta
+  de la app. Después funciona **sin conexión**.
+- **Búsqueda manual**: en el reproductor pulsa el botón **Letra** y después el
+  icono de nube; también está en el menú de cada canción y en su ficha.
+- **Letra sincronizada y karaoke**: los archivos `.lrc` con marcas de tiempo
+  se muestran línea a línea y se resalta la línea activa (♪) en el overlay y
+  en la hoja de letras.
+- **Formatos admitidos**: `.lrc`, `.srt` y `.vtt`. Puedes adjuntar cualquiera
+  desde la ficha de la canción.
+- **Ahorro de datos**: si activas "Ahorro de datos", solo se buscan letras de
+  pistas locales. La búsqueda respeta los límites de LRCLIB y su cabecera
+  `Retry-After`.
+
+La preferencia **Buscar letras automáticamente**, el resaltado y el tamaño de
+la letra se ajustan en **Ajustes → Letras y reproducción**.
+
+## Herramientas avanzadas
+
+La pestaña **Herramientas** reúne:
+
+- **Historial** de reproducción (hasta 200 pistas) con opción de borrarlo.
+- **Duplicados** agrupados por título, artista y duración, con opción de
+  quitar copias de la biblioteca.
+- **Listas de reproducción**: crear, renombrar, borrar, añadir canciones y
+  exportar la biblioteca a **M3U**, **CSV** o **JSON**.
+- **Ecualizador** de 5 bandas con presets (plano, bass boost, vocales, rock,
+  electrónica, acústica), normalización y ReplayGain.
+- **Listas inteligentes** con reglas como `year>2010`, `plays>5`,
+  `genre=Rock` o `favorite`.
+- **Estadísticas de escucha**: tiempo por día, racha, mejor racha y exportación
+  CSV del historial.
+
+Otras opciones nuevas en Ajustes: crossfade, reproducción sin pausas,
+desvanecimiento al terminar el temporizador, swipe para cambiar de pista,
+dock compacto, carátula difuminada, escaneo al iniciar, lectura automática de
+metadatos y ahorro de datos.
+
 ## Actualizaciones automáticas
 
 SoundBox se actualiza directamente desde los **releases de GitHub** (no hay

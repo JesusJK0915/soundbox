@@ -38,7 +38,27 @@ class PlayerScreen extends StatelessWidget {
             colorScheme: scheme,
             scaffoldBackgroundColor: scheme.surface,
           ),
-          child: Scaffold(
+          child: Focus(
+            autofocus: true,
+            child: CallbackShortcuts(
+              bindings: {
+                const SingleActivator(LogicalKeyboardKey.space): () {
+                  player.isPlaying ? player.pause() : player.play();
+                },
+                const SingleActivator(LogicalKeyboardKey.arrowRight): () {
+                  player.skipNext();
+                },
+                const SingleActivator(LogicalKeyboardKey.arrowLeft): () {
+                  player.skipPrevious();
+                },
+                const SingleActivator(LogicalKeyboardKey.keyF): () {
+                  prefs.toggleFavorite(track.id);
+                },
+                const SingleActivator(LogicalKeyboardKey.keyL): () {
+                  showLyricsSheet(context, track);
+                },
+              },
+              child: Scaffold(
             extendBodyBehindAppBar: true,
             appBar: AppBar(
               backgroundColor: Colors.transparent,
@@ -222,6 +242,8 @@ class PlayerScreen extends StatelessWidget {
                   position: player.position,
                 ),
               ],
+            ),
+          ),
             ),
           ),
         );

@@ -49,11 +49,12 @@ class PlaylistExportService {
     return buffer.toString();
   }
 
-  static String _csvCell(String value) {
-    final needsQuotes = value.contains(',') ||
-        value.contains('"') ||
-        value.contains('\n');
-    if (!needsQuotes) return value;
-    return '"${value.replaceAll('"', '""')}"';
+  static String _csvCell(Object? value) {
+    final text = value?.toString() ?? '';
+    final needsQuotes = text.contains(',') ||
+        text.contains('"') ||
+        text.contains('\n');
+    if (!needsQuotes) return text;
+    return '"${text.replaceAll('"', '""')}"';
   }
 }
