@@ -245,11 +245,22 @@ class SettingsScreen extends StatelessWidget {
                   value: theme.wallpaperColors,
                   onChanged: theme.setWallpaperColors,
                 ),
+                SwitchListTile(
+                  secondary: const Icon(Icons.image_outlined),
+                  title: const Text('Colores de la carátula'),
+                  subtitle: const Text(
+                    'El reproductor toma los colores de la imagen de la '
+                    'canción y cambia con cada pista.',
+                  ),
+                  value: theme.artworkColors,
+                  onChanged: theme.setArtworkColors,
+                ),
                 const Padding(
                   padding: EdgeInsets.symmetric(horizontal: 16, vertical: 4),
                   child: Text(
-                    'Si lo desactivas, cada canción vuelve a usar su propia '
-                    'paleta. El cambio se aplica al instante.',
+                    'Si desactivas los colores de la carátula se usa el tema '
+                    'del fondo de pantalla. Si también lo desactivas, cada '
+                    'canción usa su color de respaldo.',
                     style: TextStyle(fontSize: 12),
                   ),
                 ),

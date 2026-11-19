@@ -8,6 +8,7 @@ import 'package:permission_handler/permission_handler.dart';
 import 'package:provider/provider.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
+import 'core/artwork_palette_service.dart';
 import 'core/config.dart';
 import 'core/connectivity_service.dart';
 import 'core/download_service.dart';
@@ -39,6 +40,7 @@ Future<void> main() async {
   final sources = await ProviderSettingsService.load();
   final quality = await DownloadSettingsService.load();
   final themeSettings = await ThemeSettingsService.load();
+  final artworkPalette = ArtworkPaletteService();
   final userPrefs = await UserPreferencesService.load();
   final updates = UpdateService(prefs);
   final export = ExportService(prefs);
@@ -59,6 +61,7 @@ Future<void> main() async {
       export: export,
       quality: quality,
       themeSettings: themeSettings,
+      artworkPalette: artworkPalette,
       userPrefs: userPrefs,
       updates: updates,
     ),
@@ -81,6 +84,7 @@ class SoundBoxApp extends StatefulWidget {
     required this.export,
     required this.quality,
     required this.themeSettings,
+    required this.artworkPalette,
     required this.userPrefs,
     required this.updates,
   });
@@ -94,6 +98,7 @@ class SoundBoxApp extends StatefulWidget {
   final ExportService export;
   final DownloadSettingsService quality;
   final ThemeSettingsService themeSettings;
+  final ArtworkPaletteService artworkPalette;
   final UserPreferencesService userPrefs;
   final UpdateService updates;
 
@@ -137,6 +142,9 @@ class _SoundBoxAppState extends State<SoundBoxApp> {
         ),
         ChangeNotifierProvider<ThemeSettingsService>.value(
           value: widget.themeSettings,
+        ),
+        ChangeNotifierProvider<ArtworkPaletteService>.value(
+          value: widget.artworkPalette,
         ),
         ChangeNotifierProvider<UserPreferencesService>.value(
           value: widget.userPrefs,
