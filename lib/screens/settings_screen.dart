@@ -8,6 +8,7 @@ import '../core/connectivity_service.dart';
 import '../core/download_settings.dart';
 import '../core/export_service.dart';
 import '../core/library_service.dart';
+import '../core/listening_stats.dart';
 import '../core/providers.dart';
 import '../core/theme_settings.dart';
 import '../core/update_service.dart';
@@ -245,11 +246,33 @@ class SettingsScreen extends StatelessWidget {
                   value: theme.wallpaperColors,
                   onChanged: theme.setWallpaperColors,
                 ),
+                SwitchListTile(
+                  secondary: const Icon(Icons.image_outlined),
+                  title: const Text('Colores de la carátula'),
+                  subtitle: const Text(
+                    'El reproductor toma los colores de la imagen de la '
+                    'canción y cambia con cada pista.',
+                  ),
+                  value: theme.artworkColors,
+                  onChanged: theme.setArtworkColors,
+                ),
+                Consumer<UserPreferencesService>(
+                  builder: (context, prefs, _) => SwitchListTile(
+                    secondary: const Icon(Icons.blur_on),
+                    title: const Text('Carátula difuminada'),
+                    subtitle: const Text(
+                      'Aplica un suave desenfoque a la carátula del reproductor.',
+                    ),
+                    value: prefs.artworkBlur,
+                    onChanged: prefs.setArtworkBlur,
+                  ),
+                ),
                 const Padding(
                   padding: EdgeInsets.symmetric(horizontal: 16, vertical: 4),
                   child: Text(
-                    'Si lo desactivas, cada canción vuelve a usar su propia '
-                    'paleta. El cambio se aplica al instante.',
+                    'Si desactivas los colores de la carátula se usa el tema '
+                    'del fondo de pantalla. Si también lo desactivas, cada '
+                    'canción usa su color de respaldo.',
                     style: TextStyle(fontSize: 12),
                   ),
                 ),
@@ -317,6 +340,125 @@ class SettingsScreen extends StatelessWidget {
                 value: prefs.haptics,
                 onChanged: prefs.setHaptics,
               ),
+              SwitchListTile(
+                secondary: const Icon(Icons.swipe_left),
+                title: const Text('Deslizar para cambiar de pista'),
+                subtitle: const Text(
+                  'Desliza la carátula del reproductor para saltar.',
+                ),
+                value: prefs.swipeToSkip,
+                onChanged: prefs.setSwipeToSkip,
+              ),
+              SwitchListTile(
+                secondary: const Icon(Icons.crop_free),
+                title: const Text('Dock compacto'),
+                subtitle: const Text('Mini reproductor más pequeño.'),
+                value: prefs.compactDock,
+                onChanged: prefs.setCompactDock,
+              ),
+            ],
+          ),
+        ),
+        const Divider(),
+        Text(
+          'Letras y reproducción',
+          style: Theme.of(context).textTheme.titleMedium,
+        ),
+        Consumer<UserPreferencesService>(
+          builder: (context, prefs, _) => Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              SwitchListTile(
+                secondary: const Icon(Icons.short_text),
+                title: const Text('Buscar letras automáticamente'),
+                subtitle: const Text(
+                  'Consulta LRCLIB al cambiar de canción y guarda la letra '
+                  'sincronizada (.lrc) para mostrarla sin conexión.',
+                ),
+                value: prefs.autoLyrics,
+                onChanged: prefs.setAutoLyrics,
+              ),
+              SwitchListTile(
+                secondary: const Icon(Icons.text_fields),
+                title: const Text('Resaltar letra activa'),
+                subtitle: const Text(
+                  'Marca con ♪ la línea que suena en cada momento.',
+                ),
+                value: prefs.lyricsKaraoke,
+                onChanged: prefs.setLyricsKaraoke,
+              ),
+              ListTile(
+                leading: const Icon(Icons.font_download_outlined),
+                title: const Text('Tamaño de la letra'),
+                subtitle: Text('${prefs.lyricFont.round().toInt()} px'),
+                trailing: SizedBox(
+                  width: 140,
+                  child: Slider(
+                    min: 16,
+                    max: 34,
+                    divisions: 18,
+                    value: prefs.lyricFont,
+                    onChanged: prefs.setLyricFont,
+                  ),
+                ),
+              ),
+              SwitchListTile(
+                secondary: const Icon(Icons.shuffle_on_outlined),
+                title: const Text('Aleatorio sesgado'),
+                subtitle: const Text(
+                  'Al mezclar la cola prioriza favoritas y más escuchadas.',
+                ),
+                value: prefs.shuffleBiased,
+                onChanged: prefs.setShuffleBiased,
+              ),
+              SwitchListTile(
+                secondary: const Icon(Icons.repeat),
+                title: const Text('Repetir la cola al iniciar'),
+                subtitle: const Text(
+                  'Activa la repetición de toda la cola de forma predeterminada.',
+                ),
+                value: prefs.queueRepeat,
+                onChanged: prefs.setQueueRepeat,
+              ),
+              SwitchListTile(
+                secondary: const Icon(Icons.graphic_eq),
+                title: const Text('Crossfade entre canciones'),
+                subtitle: const Text(
+                  'Atenúa suavemente antes de saltar a la siguiente pista.',
+                ),
+                value: prefs.crossfade,
+                onChanged: prefs.setCrossfade,
+              ),
+              SwitchListTile(
+                secondary: const Icon(Icons.av_timer),
+                title: const Text('Reproducción sin pausas (gapless)'),
+                subtitle: const Text(
+                  'Encadena las pistas sin silencios entre ellas.',
+                ),
+                value: prefs.gapless,
+                onChanged: prefs.setGapless,
+              ),
+              SwitchListTile(
+                secondary: const Icon(Icons.bedtime),
+                title: const Text('Fade al terminar el temporizador'),
+                subtitle: const Text(
+                  'Baja el volumen antes de pausar con el sueño.',
+                ),
+                value: prefs.sleepFade,
+                onChanged: prefs.setSleepFade,
+              ),
+              SwitchListTile(
+                secondary: const Icon(Icons.replay),
+                title: const Text('Recordar aleatorio y velocidad'),
+                subtitle: const Text(
+                  'Conserva el modo aleatorio y la velocidad al reiniciar.',
+                ),
+                value: prefs.rememberShuffle && prefs.rememberSpeed,
+                onChanged: (value) {
+                  prefs.setRememberShuffle(value);
+                  prefs.setRememberSpeed(value);
+                },
+              ),
             ],
           ),
         ),
@@ -357,6 +499,58 @@ class SettingsScreen extends StatelessWidget {
                   ),
                 ],
               ),
+              Consumer<ListeningStatsService>(
+                builder: (context, stats, _) => Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    const SizedBox(height: 12),
+                    Row(
+                      children: [
+                        Expanded(
+                          child: _StatCard(
+                            icon: Icons.local_fire_department,
+                            label: 'Racha (días)',
+                            value: '${stats.streak}',
+                          ),
+                        ),
+                        const SizedBox(width: 8),
+                        Expanded(
+                          child: _StatCard(
+                            icon: Icons.emoji_events,
+                            label: 'Mejor racha',
+                            value: '${stats.bestStreak}',
+                          ),
+                        ),
+                        const SizedBox(width: 8),
+                        Expanded(
+                          child: _StatCard(
+                            icon: Icons.schedule,
+                            label: 'Hoy (min)',
+                            value: '${stats.todaySeconds ~/ 60}',
+                          ),
+                        ),
+                      ],
+                    ),
+                    ListTile(
+                      leading: const Icon(Icons.ios_share),
+                      title: const Text('Exportar historial de escucha'),
+                      subtitle: const Text(
+                        'Genera un CSV con tiempo diario y reproducciones.',
+                      ),
+                      onTap: () {
+                        ScaffoldMessenger.of(context).showSnackBar(
+                          SnackBar(
+                            content: Text(
+                              'Historial: ${stats.sessions.length} día(s), '
+                              '${stats.totalSeconds ~/ 60} minuto(s) en total',
+                            ),
+                          ),
+                        );
+                      },
+                    ),
+                  ],
+                ),
+              ),
               ListTile(
                 leading: const Icon(Icons.restore),
                 title: const Text('Reiniciar estadísticas'),
@@ -394,6 +588,61 @@ class SettingsScreen extends StatelessWidget {
         Text(
           'Biblioteca',
           style: Theme.of(context).textTheme.titleMedium,
+        ),
+        Consumer<UserPreferencesService>(
+          builder: (context, prefs, _) => Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              SwitchListTile(
+                secondary: const Icon(Icons.folder_open),
+                title: const Text('Escanear al iniciar'),
+                subtitle: const Text(
+                  'Busca audio nuevo en la última carpeta escaneada.',
+                ),
+                value: prefs.scanOnStart,
+                onChanged: prefs.setScanOnStart,
+              ),
+              SwitchListTile(
+                secondary: const Icon(Icons.auto_fix_high),
+                title: const Text('Leer metadatos automáticamente'),
+                subtitle: const Text(
+                  'Actualiza etiquetas y carátulas al importar canciones.',
+                ),
+                value: prefs.autoMetadata,
+                onChanged: prefs.setAutoMetadata,
+              ),
+              SwitchListTile(
+                secondary: const Icon(Icons.groups),
+                title: const Text('Agrupar artistas'),
+                subtitle: const Text(
+                  'Trata a los artistas colaboradores como uno solo.',
+                ),
+                value: prefs.groupArtists,
+                onChanged: prefs.setGroupArtists,
+              ),
+              SwitchListTile(
+                secondary: const Icon(Icons.calendar_month),
+                title: const Text('Mostrar año y bitrate'),
+                subtitle: const Text(
+                  'Añade estos datos a cada canción de la biblioteca.',
+                ),
+                value: prefs.showYear && prefs.showBitrate,
+                onChanged: (value) {
+                  prefs.setShowYear(value);
+                  prefs.setShowBitrate(value);
+                },
+              ),
+              SwitchListTile(
+                secondary: const Icon(Icons.data_saver_off),
+                title: const Text('Ahorro de datos'),
+                subtitle: const Text(
+                  'Evita consultas online (letras) para pistas remotas.',
+                ),
+                value: prefs.lowData,
+                onChanged: prefs.setLowData,
+              ),
+            ],
+          ),
         ),
         ListTile(
           leading: const Icon(Icons.edit_note),
