@@ -29,7 +29,9 @@ class PlayerScreen extends StatelessWidget {
         final maxMs = duration.inMilliseconds < 1 ? 1 : duration.inMilliseconds;
         final currentMs = player.position.inMilliseconds.clamp(0, maxMs);
 
-        return Theme(
+        return AnimatedTheme(
+          duration: const Duration(milliseconds: 700),
+          curve: Curves.easeOutCubic,
           data: Theme.of(context).copyWith(
             colorScheme: scheme,
             scaffoldBackgroundColor: scheme.surface,
