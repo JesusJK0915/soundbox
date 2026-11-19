@@ -8,6 +8,7 @@ import '../core/export_service.dart';
 import '../core/library_service.dart';
 import '../core/providers.dart';
 import '../core/theme_settings.dart';
+import '../core/user_preferences.dart';
 
 class SettingsScreen extends StatelessWidget {
   const SettingsScreen({super.key});
@@ -156,6 +157,139 @@ class SettingsScreen extends StatelessWidget {
               ],
             );
           },
+        ),
+        const Divider(),
+        Text(
+          'Interfaz y gestos',
+          style: Theme.of(context).textTheme.titleMedium,
+        ),
+        Consumer<UserPreferencesService>(
+          builder: (context, prefs, _) => Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              ListTile(
+                leading: const Icon(Icons.brightness_auto),
+                title: const Text('Tema'),
+                subtitle: const Text('Sistema, claro u oscuro'),
+                trailing: DropdownButton<AppThemeMode>(
+                  value: prefs.themeMode,
+                  items: const [
+                    DropdownMenuItem(
+                      value: AppThemeMode.system,
+                      child: Text('Sistema'),
+                    ),
+                    DropdownMenuItem(
+                      value: AppThemeMode.light,
+                      child: Text('Claro'),
+                    ),
+                    DropdownMenuItem(
+                      value: AppThemeMode.dark,
+                      child: Text('Oscuro'),
+                    ),
+                  ],
+                  onChanged: (value) {
+                    if (value != null) prefs.setThemeMode(value);
+                  },
+                ),
+              ),
+              SwitchListTile(
+                secondary: const Icon(Icons.airplay_outlined),
+                title: const Text('Dock flotante'),
+                subtitle: const Text(
+                  'Mini reproductor arrastrable. Se acopla arriba o abajo.',
+                ),
+                value: prefs.dockVisible,
+                onChanged: prefs.setDockVisible,
+              ),
+              SwitchListTile(
+                secondary: const Icon(Icons.swipe_rounded),
+                title: const Text('Gestos'),
+                subtitle: const Text(
+                  'Desliza entre pestañas, doble toque a la carátula para '
+                  'favoritar y arrastra el reproductor para cerrarlo.',
+                ),
+                value: prefs.gestures,
+                onChanged: prefs.setGestures,
+              ),
+              SwitchListTile(
+                secondary: const Icon(Icons.vibration),
+                title: const Text('Respuesta háptica'),
+                subtitle: const Text('Una vibración suave al interactuar.'),
+                value: prefs.haptics,
+                onChanged: prefs.setHaptics,
+              ),
+            ],
+          ),
+        ),
+        const Divider(),
+        Consumer2<LibraryService, UserPreferencesService>(
+          builder: (context, library, prefs, _) => Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(
+                'Tus estadísticas',
+                style: Theme.of(context).textTheme.titleMedium,
+              ),
+              const SizedBox(height: 8),
+              Row(
+                children: [
+                  Expanded(
+                    child: _StatCard(
+                      icon: Icons.audiotrack,
+                      label: 'Canciones',
+                      value: '${library.playableTracks.length}',
+                    ),
+                  ),
+                  const SizedBox(width: 8),
+                  Expanded(
+                    child: _StatCard(
+                      icon: Icons.favorite,
+                      label: 'Favoritas',
+                      value: '${prefs.favoriteIds.length}',
+                    ),
+                  ),
+                  const SizedBox(width: 8),
+                  Expanded(
+                    child: _StatCard(
+                      icon: Icons.play_circle_outline,
+                      label: 'Reproducciones',
+                      value: '${prefs.totalPlays}',
+                    ),
+                  ),
+                ],
+              ),
+              ListTile(
+                leading: const Icon(Icons.restore),
+                title: const Text('Reiniciar estadísticas'),
+                subtitle: const Text(
+                  'Borra favoritos, conteos y posiciones guardadas.',
+                ),
+                onTap: () async {
+                  final confirmed = await showDialog<bool>(
+                    context: context,
+                    builder: (dialogContext) => AlertDialog(
+                      title: const Text('¿Reiniciar estadísticas?'),
+                      content: const Text(
+                        'Perderás favoritos, reproducciones y el punto donde '
+                        'se quedó cada canción.',
+                      ),
+                      actions: [
+                        TextButton(
+                          onPressed: () => Navigator.pop(dialogContext, false),
+                          child: const Text('Cancelar'),
+                        ),
+                        FilledButton(
+                          onPressed: () => Navigator.pop(dialogContext, true),
+                          child: const Text('Reiniciar'),
+                        ),
+                      ],
+                    ),
+                  );
+                  if (confirmed == true) await prefs.resetStats();
+                },
+              ),
+            ],
+          ),
         ),
         const Divider(),
         Text(
@@ -382,6 +516,52 @@ class SettingsScreen extends StatelessWidget {
           subtitle: Text('Todo se guarda en la carpeta privada de la app.'),
         ),
       ],
+    );
+  }
+}
+
+class _StatCard extends StatelessWidget {
+  const _StatCard({
+    required this.icon,
+    required this.label,
+    required this.value,
+  });
+
+  final IconData icon;
+  final String label;
+  final String value;
+
+  @override
+  Widget build(BuildContext context) {
+    final scheme = Theme.of(context).colorScheme;
+    return Container(
+      padding: const EdgeInsets.symmetric(vertical: 12, horizontal: 8),
+      decoration: BoxDecoration(
+        color: scheme.secondaryContainer,
+        borderRadius: BorderRadius.circular(18),
+      ),
+      child: Column(
+        children: [
+          Icon(icon, color: scheme.onSecondaryContainer, size: 20),
+          const SizedBox(height: 6),
+          Text(
+            value,
+            style: TextStyle(
+              color: scheme.onSecondaryContainer,
+              fontSize: 18,
+              fontWeight: FontWeight.bold,
+            ),
+          ),
+          Text(
+            label,
+            textAlign: TextAlign.center,
+            style: TextStyle(
+              color: scheme.onSecondaryContainer.withOpacity(0.75),
+              fontSize: 10,
+            ),
+          ),
+        ],
+      ),
     );
   }
 }

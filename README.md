@@ -17,6 +17,33 @@ Tu PC solo sirve para escribir codigo y hacer `push`.
 - **Guardar en otro lugar**: exporta una canción o toda la biblioteca a la carpeta que elijas (Descargas, Drive, etc.).
 - **Material You**: usa los colores del fondo de pantalla del teléfono en toda la app y en el reproductor.
 - **Metadatos**: lee artista, álbum, carátula, año, género, pista, bitrate y más de los archivos de audio.
+- **Dock flotante**: mini reproductor arrastrable que recuerda su posición.
+- **Pestañas animadas** con deslizamiento lateral y transiciones suaves.
+- **Favoritos, estadísticas y reanudación** de la reproducción donde la dejaste.
+- **Temporizador de sueño, velocidad de reproducción y letra** desde el reproductor.
+
+## Interfaz y nuevas funciones
+
+- **Dock flotante**: arrastra el mini reproductor desde su tirador; se acopla
+  arriba o abajo y guarda la posición. Se puede ocultar en Ajustes.
+- **Pestañas animadas**: cambio con fundido y deslizamiento; también puedes
+  deslizar el dedo de izquierda a derecha para cambiar de pestaña.
+- **Biblioteca mejorada**: búsqueda local, filtros (Todas, Favoritas,
+  Recientes, Más escuchadas), orden configurable, vista de lista o cuadrícula,
+  reproducción de todo o en aleatorio y selección múltiple (añadir a la cola,
+  guardar o eliminar varias canciones a la vez). Desliza hacia abajo para
+  volver a leer los metadatos.
+- **Favoritos**: toca el corazón en el reproductor o en el dock; doble toque a
+  la carátula también lo marca como favorito (si los gestos están activos).
+- **Estadísticas**: se cuenta cada reproducción y se guarda la posición de cada
+  canción para continuar después de reiniciar. Ajustes muestra totales y permite
+  reiniciar los datos.
+- **Reproductor**: temporizador de sueño (5 a 90 minutos, con +5 min y
+  cancelación), velocidad de 0,5× a 2×, retroceso/avance de 10 segundos,
+  letra incrustada, control de la cola (subir, bajar, quitar y limpiar) y
+  arrastre hacia abajo desde el tirador superior para cerrarlo.
+- **Apariencia**: tema del sistema, claro u oscuro, respuesta háptica y gestos
+  configurables en **Ajustes → Interfaz y gestos**.
 
 ## Metadatos y carátulas
 
