@@ -45,9 +45,11 @@ usar **Wikimedia Commons**, **Pixabay** o **Internet Archive**.
 
 ## Firma (opcional)
 
-Sin secrets, los APKs se firman con la clave debug de Flutter (instalables, pero
-Android avisara de que son de desarrollo). Para firmar de verdad, anade estos
-Secrets en GitHub:
+`DEBUG_KEYSTORE_BASE64` contiene una clave debug fija para que las actualizaciones
+se instalen sin desinstalar la version anterior. El workflow la decodifica y crea
+`android/app/debug.keystore` automaticamente.
+
+Para firmar con una clave propia de release, anade estos Secrets en GitHub:
 
 - `KEYSTORE_BASE64` (keystore en base64)
 - `KEY_ALIAS`
