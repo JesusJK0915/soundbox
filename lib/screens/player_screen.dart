@@ -1,10 +1,13 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:just_audio/just_audio.dart';
 import 'package:provider/provider.dart';
 
 import '../core/models.dart';
 import '../core/player_theme.dart';
+import '../core/user_preferences.dart';
 import '../player/player_service.dart';
+import '../widgets/player_sheets.dart';
 import '../widgets/subtitle_overlay.dart';
 import '../widgets/track_artwork.dart';
 import '../widgets/track_details_sheet.dart';
@@ -18,6 +21,8 @@ class PlayerScreen extends StatelessWidget {
       builder: (context, player, _) {
         final track = player.currentTrack;
         if (track == null) return const _EmptyPlayer();
+        final prefs = context.watch<UserPreferencesService>();
+        final isFavorite = prefs.isFavorite(track.id);
 
         final scheme = playerSchemeFor(context, track);
         final duration = player.duration ?? Duration.zero;
@@ -50,14 +55,60 @@ class PlayerScreen extends StatelessWidget {
               ),
               title: const Text('Suena ahora'),
               actions: [
+                AnimatedScale(
+                  scale: isFavorite ? 1.12 : 1,
+                  duration: const Duration(milliseconds: 240),
+                  curve: Curves.easeOutBack,
+                  child: IconButton(
+                    tooltip: isFavorite
+                        ? 'Quitar de favoritos'
+                        : 'Añadir a favoritos',
+                    icon: AnimatedSwitcher(
+                      duration: const Duration(milliseconds: 200),
+                      child: Icon(
+                        isFavorite ? Icons.favorite : Icons.favorite_border,
+                        key: ValueKey<bool>(isFavorite),
+                      ),
+                    ),
+                    onPressed: () async {
+                      await prefs.toggleFavorite(track.id);
+                      if (prefs.haptics) HapticFeedback.selectionClick();
+                    },
+                  ),
+                ),
                 IconButton(
                   tooltip: 'Detalles de la canción',
                   icon: const Icon(Icons.info_outline_rounded),
                   onPressed: () => showTrackDetails(context, track),
                 ),
-                Padding(
-                  padding: const EdgeInsets.only(right: 20),
-                  child: _PlayingBars(isPlaying: player.isPlaying),
+                PopupMenuButton<String>(
+                  tooltip: 'Más opciones',
+                  icon: const Icon(Icons.more_vert_rounded),
+                  onSelected: (value) {
+                    if (value == 'speed') showSpeedSheet(context);
+                    if (value == 'sleep') showSleepSheet(context);
+                    if (value == 'lyrics') showLyricsSheet(context, track);
+                    if (value == 'next') player.playNext(track);
+                  },
+                  itemBuilder: (context) => [
+                    PopupMenuItem(
+                      value: 'speed',
+                      child: Text('Velocidad · ${player.speed.toStringAsFixed(2)}×'),
+                    ),
+                    PopupMenuItem(
+                      value: 'sleep',
+                      child: Text(
+                        player.sleepActive
+                            ? 'Temporizador: ${_formatRemaining(player.sleepRemaining)}'
+                            : 'Temporizador de sueño',
+                      ),
+                    ),
+                    const PopupMenuItem(value: 'lyrics', child: Text('Letra')),
+                    const PopupMenuItem(
+                      value: 'next',
+                      child: Text('Reproducir de nuevo a continuación'),
+                    ),
+                  ],
                 ),
               ],
             ),
@@ -80,10 +131,22 @@ class PlayerScreen extends StatelessWidget {
                             child: Column(
                               crossAxisAlignment: CrossAxisAlignment.stretch,
                               children: [
+                                _DragHandle(prefs: prefs),
+                                const SizedBox(height: 4),
                                 Center(
-                                  child: _HeroArtwork(
-                                    track: track,
-                                    isPlaying: player.isPlaying,
+                                  child: GestureDetector(
+                                    onDoubleTap: prefs.gestures
+                                        ? () async {
+                                            await prefs.toggleFavorite(track.id);
+                                            if (prefs.haptics) {
+                                              HapticFeedback.mediumImpact();
+                                            }
+                                          }
+                                        : null,
+                                    child: _HeroArtwork(
+                                      track: track,
+                                      isPlaying: player.isPlaying,
+                                    ),
                                   ),
                                 ),
                                 const SizedBox(height: 28),
@@ -97,6 +160,21 @@ class PlayerScreen extends StatelessWidget {
                                 ),
                                 const SizedBox(height: 12),
                                 _MetaChips(track: track),
+                                if (player.speed - 1.0 != 0)
+                                  Padding(
+                                    padding: const EdgeInsets.only(top: 8),
+                                    child: Center(
+                                      child: Chip(
+                                        avatar: const Icon(Icons.speed, size: 15),
+                                        label: Text(
+                                          '${player.speed.toStringAsFixed(2)}×',
+                                        ),
+                                        visualDensity: VisualDensity.compact,
+                                      ),
+                                    ),
+                                  ),
+                                if (player.sleepActive)
+                                  _SleepBanner(player: player),
                                 const SizedBox(height: 28),
                                 _Progress(
                                   currentMs: currentMs,
@@ -130,6 +208,84 @@ class PlayerScreen extends StatelessWidget {
       },
     );
   }
+}
+
+class _DragHandle extends StatelessWidget {
+  const _DragHandle({required this.prefs});
+
+  final UserPreferencesService prefs;
+
+  @override
+  Widget build(BuildContext context) {
+    final scheme = Theme.of(context).colorScheme;
+    return Center(
+      child: GestureDetector(
+        behavior: HitTestBehavior.opaque,
+        onVerticalDragEnd: (details) {
+          if (!prefs.gestures) return;
+          final velocity = details.primaryVelocity ?? 0;
+          if (velocity > 420 && context.mounted) {
+            Navigator.of(context).maybePop();
+          }
+        },
+        child: Container(
+          width: 64,
+          height: 22,
+          alignment: Alignment.center,
+          child: Container(
+            width: 42,
+            height: 4,
+            decoration: BoxDecoration(
+              color: scheme.onSurfaceVariant.withOpacity(0.45),
+              borderRadius: BorderRadius.circular(4),
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+class _SleepBanner extends StatelessWidget {
+  const _SleepBanner({required this.player});
+
+  final PlayerService player;
+
+  @override
+  Widget build(BuildContext context) {
+    final scheme = Theme.of(context).colorScheme;
+    return AnimatedContainer(
+      duration: const Duration(milliseconds: 300),
+      margin: const EdgeInsets.only(top: 10),
+      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+      decoration: BoxDecoration(
+        color: scheme.tertiaryContainer,
+        borderRadius: BorderRadius.circular(18),
+      ),
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Icon(Icons.nightlight_round, size: 17, color: scheme.primary),
+          const SizedBox(width: 8),
+          Text(
+            'Sueño · ${_formatRemaining(player.sleepRemaining)}',
+            style: TextStyle(color: scheme.onTertiaryContainer, fontSize: 12),
+          ),
+          TextButton(
+            onPressed: () => showSleepSheet(context),
+            child: const Text('Cambiar'),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+String _formatRemaining(Duration? value) {
+  final duration = value ?? Duration.zero;
+  final minutes = duration.inMinutes.remainder(60).toString().padLeft(2, '0');
+  final seconds = duration.inSeconds.remainder(60).toString().padLeft(2, '0');
+  return '$minutes:$seconds';
 }
 
 class _EmptyPlayer extends StatelessWidget {
@@ -404,17 +560,40 @@ class _Progress extends StatelessWidget {
           onChanged: (value) => onSeek(Duration(milliseconds: value.toInt())),
         ),
         Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 8),
+          padding: const EdgeInsets.symmetric(horizontal: 2),
           child: Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
-              Text(_format(position), style: TextStyle(color: scheme.onSurfaceVariant)),
-              Text(_format(duration), style: TextStyle(color: scheme.onSurfaceVariant)),
+              IconButton(
+                tooltip: 'Retroceder 10 segundos',
+                icon: const Icon(Icons.replay_10, size: 20),
+                onPressed: () => _seekBy(-const Duration(seconds: 10)),
+              ),
+              Text(_format(position),
+                  style: TextStyle(color: scheme.onSurfaceVariant)),
+              const Spacer(),
+              Text(_format(duration),
+                  style: TextStyle(color: scheme.onSurfaceVariant)),
+              IconButton(
+                tooltip: 'Avanzar 10 segundos',
+                icon: const Icon(Icons.forward_10, size: 20),
+                onPressed: () => _seekBy(const Duration(seconds: 10)),
+              ),
             ],
           ),
         ),
       ],
     );
+  }
+
+  void _seekBy(Duration delta) {
+    final target = position + delta;
+    if (target < Duration.zero) {
+      onSeek(Duration.zero);
+    } else if (target > duration) {
+      onSeek(duration);
+    } else {
+      onSeek(target);
+    }
   }
 
   String _format(Duration value) {
@@ -714,6 +893,10 @@ class _QueueSheet extends StatelessWidget {
                         style: Theme.of(context).textTheme.titleLarge,
                       ),
                     ),
+                    TextButton(
+                      onPressed: player.clearQueue,
+                      child: const Text('Limpiar'),
+                    ),
                     IconButton(
                       icon: const Icon(Icons.close_rounded),
                       onPressed: () => Navigator.of(context).pop(),
@@ -764,6 +947,33 @@ class _QueueSheet extends StatelessWidget {
                           overflow: TextOverflow.ellipsis,
                         ),
                         selected: isCurrent,
+                        trailing: Row(
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            IconButton(
+                              tooltip: 'Subir en la cola',
+                              icon: const Icon(Icons.keyboard_arrow_up, size: 20),
+                              onPressed: index == 0
+                                  ? null
+                                  : () => player.moveQueueItem(index, index - 1),
+                            ),
+                            IconButton(
+                              tooltip: 'Bajar en la cola',
+                              icon: const Icon(
+                                Icons.keyboard_arrow_down,
+                                size: 20,
+                              ),
+                              onPressed: index == player.queue.length - 1
+                                  ? null
+                                  : () => player.moveQueueItem(index, index + 1),
+                            ),
+                            IconButton(
+                              tooltip: 'Quitar de la cola',
+                              icon: const Icon(Icons.close_rounded, size: 18),
+                              onPressed: () => player.removeFromQueue(index),
+                            ),
+                          ],
+                        ),
                         onTap: () {
                           player.playIndex(index);
                           Navigator.of(context).pop();

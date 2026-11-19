@@ -16,6 +16,7 @@ import 'core/export_service.dart';
 import 'core/library_service.dart';
 import 'core/providers.dart';
 import 'core/theme_settings.dart';
+import 'core/user_preferences.dart';
 import 'player/player_service.dart';
 import 'screens/home_screen.dart';
 import 'screens/welcome_screen.dart';
@@ -37,9 +38,10 @@ Future<void> main() async {
   final sources = await ProviderSettingsService.load();
   final quality = await DownloadSettingsService.load();
   final themeSettings = await ThemeSettingsService.load();
+  final userPrefs = await UserPreferencesService.load();
   final export = ExportService(prefs);
   final downloads = DownloadService(library, quality);
-  final player = PlayerService(connectivity);
+  final player = PlayerService(connectivity, userPrefs);
 
   final session = await AudioSession.instance;
   await session.configure(const AudioSessionConfiguration.music());
@@ -55,6 +57,7 @@ Future<void> main() async {
       export: export,
       quality: quality,
       themeSettings: themeSettings,
+      userPrefs: userPrefs,
     ),
   );
 
@@ -75,6 +78,7 @@ class SoundBoxApp extends StatefulWidget {
     required this.export,
     required this.quality,
     required this.themeSettings,
+    required this.userPrefs,
   });
 
   final SharedPreferences prefs;
@@ -86,6 +90,7 @@ class SoundBoxApp extends StatefulWidget {
   final ExportService export;
   final DownloadSettingsService quality;
   final ThemeSettingsService themeSettings;
+  final UserPreferencesService userPrefs;
 
   @override
   State<SoundBoxApp> createState() => _SoundBoxAppState();
@@ -128,15 +133,34 @@ class _SoundBoxAppState extends State<SoundBoxApp> {
         ChangeNotifierProvider<ThemeSettingsService>.value(
           value: widget.themeSettings,
         ),
+        ChangeNotifierProvider<UserPreferencesService>.value(
+          value: widget.userPrefs,
+        ),
       ],
-      child: Consumer<ThemeSettingsService>(
-        builder: (context, themeSettings, _) {
+      child: Consumer2<ThemeSettingsService, UserPreferencesService>(
+        builder: (context, themeSettings, userPrefs, _) {
           return DynamicColorBuilder(
             builder: (lightDynamic, darkDynamic) {
-              final fallback = ColorScheme.fromSeed(
-                seedColor: Colors.deepPurple,
+              final platformBrightness =
+                  WidgetsBinding.instance.platformDispatcher.platformBrightness;
+              final brightness = switch (userPrefs.themeMode) {
+                AppThemeMode.system => platformBrightness,
+                AppThemeMode.light => Brightness.light,
+                AppThemeMode.dark => Brightness.dark,
+              };
+              final seed = Colors.deepPurple;
+              final lightFallback = ColorScheme.fromSeed(
+                seedColor: seed,
+                brightness: Brightness.light,
+              );
+              final darkFallback = ColorScheme.fromSeed(
+                seedColor: seed,
                 brightness: Brightness.dark,
               );
+              final selectedDynamic = themeSettings.wallpaperColors
+                  ? (brightness == Brightness.dark ? darkDynamic : lightDynamic)
+                  : null;
+
               return WallpaperColors(
                 light: lightDynamic,
                 dark: darkDynamic,
@@ -145,10 +169,22 @@ class _SoundBoxAppState extends State<SoundBoxApp> {
                   debugShowCheckedModeBanner: false,
                   theme: ThemeData(
                     useMaterial3: true,
-                    colorScheme: themeSettings.wallpaperColors
-                        ? (darkDynamic ?? fallback)
-                        : fallback,
+                    brightness: Brightness.light,
+                    colorScheme: selectedDynamic ?? lightFallback,
                   ),
+                  darkTheme: ThemeData(
+                    useMaterial3: true,
+                    brightness: Brightness.dark,
+                    colorScheme: (themeSettings.wallpaperColors
+                            ? darkDynamic
+                            : null) ??
+                        darkFallback,
+                  ),
+                  themeMode: switch (userPrefs.themeMode) {
+                    AppThemeMode.system => ThemeMode.system,
+                    AppThemeMode.light => ThemeMode.light,
+                    AppThemeMode.dark => ThemeMode.dark,
+                  },
                   home: _welcomeAccepted
                       ? const HomeScreen()
                       : WelcomeScreen(onAccepted: _acceptWelcome),
