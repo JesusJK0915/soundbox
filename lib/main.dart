@@ -9,6 +9,7 @@ import 'package:shared_preferences/shared_preferences.dart';
 import 'core/config.dart';
 import 'core/connectivity_service.dart';
 import 'core/download_service.dart';
+import 'core/download_settings.dart';
 import 'core/export_service.dart';
 import 'core/library_service.dart';
 import 'core/providers.dart';
@@ -30,8 +31,9 @@ Future<void> main() async {
   await connectivity.initialize();
 
   final sources = await ProviderSettingsService.load();
+  final quality = await DownloadSettingsService.load();
   final export = ExportService(prefs);
-  final downloads = DownloadService(library);
+  final downloads = DownloadService(library, quality);
   final player = PlayerService(connectivity);
 
   final session = await AudioSession.instance;
@@ -45,6 +47,7 @@ Future<void> main() async {
       player: player,
       sources: sources,
       export: export,
+      quality: quality,
     ),
   );
 }
@@ -56,6 +59,7 @@ class SoundBoxApp extends StatelessWidget {
   final PlayerService player;
   final ProviderSettingsService sources;
   final ExportService export;
+  final DownloadSettingsService quality;
 
   const SoundBoxApp({
     super.key,
@@ -65,6 +69,7 @@ class SoundBoxApp extends StatelessWidget {
     required this.player,
     required this.sources,
     required this.export,
+    required this.quality,
   });
 
   @override
@@ -77,6 +82,7 @@ class SoundBoxApp extends StatelessWidget {
         ChangeNotifierProvider<PlayerService>.value(value: player),
         ChangeNotifierProvider<ProviderSettingsService>.value(value: sources),
         ChangeNotifierProvider<ExportService>.value(value: export),
+        ChangeNotifierProvider<DownloadSettingsService>.value(value: quality),
       ],
       child: MaterialApp(
         title: appName,

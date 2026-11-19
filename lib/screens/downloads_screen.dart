@@ -33,7 +33,15 @@ class DownloadsScreen extends StatelessWidget {
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Text(_statusLabel(task.status)),
-                  LinearProgressIndicator(value: task.progress),
+                  if (task.status == DownloadStatus.converting)
+                    const LinearProgressIndicator()
+                  else
+                    LinearProgressIndicator(value: task.progress),
+                  if (task.note != null)
+                    Text(
+                      task.note!,
+                      style: const TextStyle(color: Colors.green, fontSize: 11),
+                    ),
                   if (task.errorMessage != null)
                     Text(
                       task.errorMessage!,
@@ -119,6 +127,8 @@ class DownloadsScreen extends StatelessWidget {
         return 'En cola';
       case DownloadStatus.downloading:
         return 'Descargando';
+      case DownloadStatus.converting:
+        return 'Convirtiendo';
       case DownloadStatus.paused:
         return 'Pausada';
       case DownloadStatus.done:

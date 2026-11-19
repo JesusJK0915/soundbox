@@ -9,9 +9,21 @@ Tu PC solo sirve para escribir codigo y hacer `push`.
 - Detecta automaticamente si hay internet; si no hay, oculta la busqueda y usa solo la biblioteca local.
 - Busca en varias fuentes legales y descarga al dispositivo.
 - Descargas con progreso, pausa y reanude (`Range`).
+- Conversion local a **MP3, M4A/AAC, OGG, FLAC o WAV** con bitrate de 64 a 320 kbps.
 - Subtitulos `.srt` / `.vtt` que se adjuntan a una pista.
 - Pega una **URL directa** a un archivo propio para descargarlo.
 - **Guardar en otro lugar**: exporta una canción o toda la biblioteca a la carpeta que elijas (Descargas, Drive, etc.).
+
+## Formato y calidad de descarga
+
+En **Ajustes → Formato de descarga** eliges el formato final y, para los
+formatos con perdida (MP3/M4A/OGG), el bitrate: 64, 96, 128, 192, 256 o 320
+kbps. La app baja el archivo original y lo convierte en el telefono con
+`ffmpeg-kit` (LGPL), sin subirlo a ningun servidor. FLAC y WAV ignoran el
+bitrate. "Original (sin convertir)" guarda lo que ofrece la fuente.
+
+Si la conversion falla, se guarda el archivo original y se avisa en Descargas.
+Requiere Android 7.0 (API 24) o superior.
 
 ## Guardar la musica en otra carpeta
 

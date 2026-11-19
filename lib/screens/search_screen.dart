@@ -3,6 +3,7 @@ import 'package:provider/provider.dart';
 
 import '../core/connectivity_service.dart';
 import '../core/download_service.dart';
+import '../core/download_settings.dart';
 import '../core/models.dart';
 import '../core/providers.dart';
 import '../core/search_service.dart';
@@ -81,6 +82,19 @@ class _SearchScreenState extends State<SearchScreen> {
                   ),
                 ),
                 onSubmitted: (_) => _runSearch(online),
+              ),
+            ),
+            Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 12),
+              child: Align(
+                alignment: Alignment.centerLeft,
+                child: Consumer<DownloadSettingsService>(
+                  builder: (context, quality, _) => Text(
+                    'Descargas: ${quality.label}'
+                    '${quality.isLossy ? ' · ${quality.bitrate} kbps' : ''}',
+                    style: const TextStyle(fontSize: 11),
+                  ),
+                ),
               ),
             ),
             if (_error != null)

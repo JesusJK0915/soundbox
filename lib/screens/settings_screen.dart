@@ -3,6 +3,7 @@ import 'package:provider/provider.dart';
 
 import '../core/config.dart';
 import '../core/connectivity_service.dart';
+import '../core/download_settings.dart';
 import '../core/export_service.dart';
 import '../core/library_service.dart';
 import '../core/providers.dart';
@@ -183,6 +184,63 @@ class SettingsScreen extends StatelessWidget {
                 ),
               );
             },
+          ),
+        ),
+        const Divider(),
+        Text(
+          'Formato de descarga',
+          style: Theme.of(context).textTheme.titleMedium,
+        ),
+        Consumer<DownloadSettingsService>(
+          builder: (context, quality, _) => Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              ListTile(
+                leading: const Icon(Icons.audiotrack),
+                title: const Text('Formato'),
+                trailing: DropdownButton<AudioFormat>(
+                  value: quality.format,
+                  items: AudioFormat.values
+                      .map(
+                        (format) => DropdownMenuItem<AudioFormat>(
+                          value: format,
+                          child: Text(format.label),
+                        ),
+                      )
+                      .toList(),
+                  onChanged: (value) {
+                    if (value != null) quality.setFormat(value);
+                  },
+                ),
+              ),
+              if (quality.isLossy)
+                ListTile(
+                  leading: const Icon(Icons.speed),
+                  title: const Text('Bitrate'),
+                  trailing: DropdownButton<int>(
+                    value: quality.bitrate,
+                    items: DownloadSettingsService.bitrates
+                        .map(
+                          (value) => DropdownMenuItem<int>(
+                            value: value,
+                            child: Text('$value kbps'),
+                          ),
+                        )
+                        .toList(),
+                    onChanged: (value) {
+                      if (value != null) quality.setBitrate(value);
+                    },
+                  ),
+                ),
+              const Padding(
+                padding: EdgeInsets.symmetric(horizontal: 16, vertical: 4),
+                child: Text(
+                  'Se descarga el archivo original y se convierte en el '
+                  'dispositivo. Los formatos sin perdida ignoran el bitrate.',
+                  style: TextStyle(fontSize: 12),
+                ),
+              ),
+            ],
           ),
         ),
         const Divider(),

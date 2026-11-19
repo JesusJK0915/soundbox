@@ -1,6 +1,14 @@
 import 'package:dio/dio.dart';
 
-enum DownloadStatus { queued, downloading, paused, done, failed, canceled }
+enum DownloadStatus {
+  queued,
+  downloading,
+  converting,
+  paused,
+  done,
+  failed,
+  canceled,
+}
 
 class Track {
   final String id;
@@ -77,12 +85,13 @@ class DownloadTask {
   final String id;
   final String title;
   final String url;
-  final String savePath;
+  String savePath;
   final Track track;
   final CancelToken cancelToken;
   DownloadStatus status;
   double progress;
   String? errorMessage;
+  String? note;
 
   DownloadTask({
     required this.id,
@@ -94,5 +103,6 @@ class DownloadTask {
     this.status = DownloadStatus.queued,
     this.progress = 0,
     this.errorMessage,
+    this.note,
   });
 }
