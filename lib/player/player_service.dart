@@ -212,8 +212,9 @@ class PlayerService extends ChangeNotifier {
     await _player.setLoopMode(_loopMode);
     await _player.setShuffleModeEnabled(_shuffle);
     await _player.setSpeed(_speed);
-    if (_prefs != null) {
-      await _player.setVolume(_prefs!.volume);
+    final prefs = _prefs;
+    if (prefs != null) {
+      await _player.setVolume(prefs.volume);
     }
   }
 

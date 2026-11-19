@@ -2,8 +2,11 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:provider/provider.dart';
 
+import '../core/connectivity_service.dart';
 import '../core/export_service.dart';
 import '../core/library_service.dart';
+import '../core/library_tools.dart';
+import '../core/lyrics_service.dart';
 import '../core/models.dart';
 import '../core/user_preferences.dart';
 import '../player/player_service.dart';
@@ -371,6 +374,10 @@ class _LibraryScreenState extends State<LibraryScreen> {
                   track.artist,
                   if (track.album != null && track.album!.isNotEmpty)
                     track.album!,
+                  if (prefs.showYear && track.year != null)
+                    track.year.toString(),
+                  if (prefs.showBitrate && track.bitrateBps != null)
+                    '${(track.bitrateBps! / 1000).round()} kbps',
                   if (track.subtitlePath != null) 'SUB',
                 ].join(' · '),
                 maxLines: 1,
@@ -413,6 +420,14 @@ class _LibraryScreenState extends State<LibraryScreen> {
                         PopupMenuItem(
                           value: 'subtitle',
                           child: Text('Adjuntar SUB'),
+                        ),
+                        PopupMenuItem(
+                          value: 'playlist',
+                          child: Text('Añadir a lista'),
+                        ),
+                        PopupMenuItem(
+                          value: 'lyrics',
+                          child: Text('Buscar letras (LRCLIB)'),
                         ),
                         PopupMenuItem(value: 'remove', child: Text('Eliminar')),
                       ],
@@ -539,9 +554,75 @@ class _LibraryScreenState extends State<LibraryScreen> {
         final path = await library.pickSubtitlePath();
         if (path != null) await library.attachSubtitle(track.id, path);
         break;
+      case 'playlist':
+        await _addToPlaylist(context, track);
+        break;
+      case 'lyrics':
+        await _fetchLyrics(context, track, library);
+        break;
       case 'remove':
         await library.remove(track.id);
         break;
+    }
+  }
+
+  Future<void> _fetchLyrics(
+    BuildContext context,
+    Track track,
+    LibraryService library,
+  ) async {
+    final online = context.read<ConnectivityService>().isOnline;
+    if (!online) {
+      if (!context.mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Sin conexión a LRCLIB')),
+      );
+      return;
+    }
+    final result = await context.read<LyricsService>().fetch(track);
+    final content = result?.lrcContent;
+    if (content != null) {
+      await library.attachLyrics(track.id, content);
+    }
+    if (!context.mounted) return;
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: Text(
+          content != null
+              ? 'Letra guardada para ${track.title}'
+              : 'No se encontró letra para ${track.title}',
+        ),
+      ),
+    );
+  }
+
+  Future<void> _addToPlaylist(BuildContext context, Track track) async {
+    final tools = context.read<LibraryToolsService>();
+    if (tools.playlists.isEmpty) {
+      if (!context.mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('Crea una lista primero en Herramientas → Listas'),
+        ),
+      );
+      return;
+    }
+    final playlistId = await showDialog<String>(
+      context: context,
+      builder: (dialogContext) => SimpleDialog(
+        title: const Text('Añadir a lista'),
+        children: tools.playlists
+            .map(
+              (playlist) => SimpleDialogOption(
+                onPressed: () => Navigator.pop(dialogContext, playlist.id),
+                child: Text(playlist.name),
+              ),
+            )
+            .toList(),
+      ),
+    );
+    if (playlistId != null) {
+      await tools.addToPlaylist(playlistId, track.id);
     }
   }
 

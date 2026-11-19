@@ -49,9 +49,9 @@ Future<void> main() async {
   final export = ExportService(prefs);
   final downloads = DownloadService(library, quality);
   final lyrics = LyricsService();
-  final player = PlayerService(connectivity, userPrefs, library, lyrics, stats);
   final tools = LibraryToolsService(prefs);
   final stats = ListeningStatsService(prefs);
+  final player = PlayerService(connectivity, userPrefs, library, lyrics, stats);
 
   final session = await AudioSession.instance;
   await session.configure(const AudioSessionConfiguration.music());

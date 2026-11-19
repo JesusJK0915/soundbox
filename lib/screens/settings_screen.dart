@@ -329,6 +329,22 @@ class SettingsScreen extends StatelessWidget {
                 value: prefs.haptics,
                 onChanged: prefs.setHaptics,
               ),
+              SwitchListTile(
+                secondary: const Icon(Icons.swipe_left),
+                title: const Text('Deslizar para cambiar de pista'),
+                subtitle: const Text(
+                  'Desliza la carátula del reproductor para saltar.',
+                ),
+                value: prefs.swipeToSkip,
+                onChanged: prefs.setSwipeToSkip,
+              ),
+              SwitchListTile(
+                secondary: const Icon(Icons.crop_free),
+                title: const Text('Dock compacto'),
+                subtitle: const Text('Mini reproductor más pequeño.'),
+                value: prefs.compactDock,
+                onChanged: prefs.setCompactDock,
+              ),
             ],
           ),
         ),
@@ -383,6 +399,33 @@ class SettingsScreen extends StatelessWidget {
                 ),
                 value: prefs.shuffleBiased,
                 onChanged: prefs.setShuffleBiased,
+              ),
+              SwitchListTile(
+                secondary: const Icon(Icons.graphic_eq),
+                title: const Text('Crossfade entre canciones'),
+                subtitle: const Text(
+                  'Atenúa suavemente antes de saltar a la siguiente pista.',
+                ),
+                value: prefs.crossfade,
+                onChanged: prefs.setCrossfade,
+              ),
+              SwitchListTile(
+                secondary: const Icon(Icons.av_timer),
+                title: const Text('Reproducción sin pausas (gapless)'),
+                subtitle: const Text(
+                  'Encadena las pistas sin silencios entre ellas.',
+                ),
+                value: prefs.gapless,
+                onChanged: prefs.setGapless,
+              ),
+              SwitchListTile(
+                secondary: const Icon(Icons.bedtime),
+                title: const Text('Fade al terminar el temporizador'),
+                subtitle: const Text(
+                  'Baja el volumen antes de pausar con el sueño.',
+                ),
+                value: prefs.sleepFade,
+                onChanged: prefs.setSleepFade,
               ),
               SwitchListTile(
                 secondary: const Icon(Icons.replay),
@@ -525,6 +568,61 @@ class SettingsScreen extends StatelessWidget {
         Text(
           'Biblioteca',
           style: Theme.of(context).textTheme.titleMedium,
+        ),
+        Consumer<UserPreferencesService>(
+          builder: (context, prefs, _) => Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              SwitchListTile(
+                secondary: const Icon(Icons.folder_open),
+                title: const Text('Escanear al iniciar'),
+                subtitle: const Text(
+                  'Busca audio nuevo en la última carpeta escaneada.',
+                ),
+                value: prefs.scanOnStart,
+                onChanged: prefs.setScanOnStart,
+              ),
+              SwitchListTile(
+                secondary: const Icon(Icons.auto_fix_high),
+                title: const Text('Leer metadatos automáticamente'),
+                subtitle: const Text(
+                  'Actualiza etiquetas y carátulas al importar canciones.',
+                ),
+                value: prefs.autoMetadata,
+                onChanged: prefs.setAutoMetadata,
+              ),
+              SwitchListTile(
+                secondary: const Icon(Icons.groups),
+                title: const Text('Agrupar artistas'),
+                subtitle: const Text(
+                  'Trata a los artistas colaboradores como uno solo.',
+                ),
+                value: prefs.groupArtists,
+                onChanged: prefs.setGroupArtists,
+              ),
+              SwitchListTile(
+                secondary: const Icon(Icons.calendar_month),
+                title: const Text('Mostrar año y bitrate'),
+                subtitle: const Text(
+                  'Añade estos datos a cada canción de la biblioteca.',
+                ),
+                value: prefs.showYear && prefs.showBitrate,
+                onChanged: (value) {
+                  prefs.setShowYear(value);
+                  prefs.setShowBitrate(value);
+                },
+              ),
+              SwitchListTile(
+                secondary: const Icon(Icons.data_saver_off),
+                title: const Text('Ahorro de datos'),
+                subtitle: const Text(
+                  'Evita consultas online (letras) para pistas remotas.',
+                ),
+                value: prefs.lowData,
+                onChanged: prefs.setLowData,
+              ),
+            ],
+          ),
         ),
         ListTile(
           leading: const Icon(Icons.edit_note),
