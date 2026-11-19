@@ -1,0 +1,61 @@
+name: Alpha APK
+
+on:
+  push:
+    branches:
+      - alpha
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  build-alpha:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Java
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '17'
+
+      - name: Setup Flutter
+        uses: subosito/flutter-action@v2
+        with:
+          channel: stable
+          flutter-version: '3.24.5'
+          cache: true
+
+      - name: Generar archivos de plataforma Android
+        run: flutter create --platforms=android --project-name soundbox --org com.soundbox .
+
+      - name: Dependencias
+        run: flutter pub get
+
+      - name: Analisis
+        run: flutter analyze --no-fatal-infos --no-fatal-warnings
+
+      - name: Tests
+        run: flutter test
+
+      - name: Build APK debug (alpha)
+        run: flutter build apk --debug
+
+      - name: Subir artefacto
+        uses: actions/upload-artifact@v4
+        with:
+          name: soundbox-alpha-apk
+          path: build/app/outputs/flutter-apk/app-debug.apk
+          if-no-files-found: error
+
+      - name: Publicar prerelease alpha
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: v0.1.0-alpha.${{ github.run_number }}
+          name: SoundBox Alpha ${{ github.run_number }}
+          prerelease: true
+          generate_release_notes: true
+          files: build/app/outputs/flutter-apk/app-debug.apk

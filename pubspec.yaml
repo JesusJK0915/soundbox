@@ -1,0 +1,31 @@
+name: soundbox
+description: Reproductor y biblioteca musical offline con busqueda legal y descargas.
+publish_to: 'none'
+version: 0.1.0+1
+
+environment:
+  sdk: '>=3.4.0 <4.0.0'
+
+dependencies:
+  flutter:
+    sdk: flutter
+  cupertino_icons: ^1.0.8
+  provider: ^6.1.2
+  just_audio: ^0.9.38
+  audio_session: ^0.1.16
+  connectivity_plus: ^6.1.0
+  dio: ^5.7.0
+  path: ^1.9.0
+  path_provider: ^2.1.4
+  permission_handler: ^11.3.0
+  shared_preferences: ^2.3.2
+  file_picker: ^8.1.2
+  video_player: ^2.9.1
+
+dev_dependencies:
+  flutter_test:
+    sdk: flutter
+  flutter_lints: ^5.0.0
+
+flutter:
+  uses-material-design: true

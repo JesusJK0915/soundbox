@@ -1,0 +1,74 @@
+class SubtitleCue {
+  final Duration start;
+  final Duration end;
+  final String text;
+
+  const SubtitleCue({
+    required this.start,
+    required this.end,
+    required this.text,
+  });
+}
+
+Duration _parseTime(String raw) {
+  final normalized = raw.replaceFirst(',', '.');
+  final parts = normalized.split(':');
+  final hours = int.tryParse(parts[0]) ?? 0;
+  final minutes = int.tryParse(parts.length > 1 ? parts[1] : '0') ?? 0;
+  final secondsPart = parts.length > 2 ? parts[2] : '0';
+  final dot = secondsPart.indexOf('.');
+  final seconds = int.tryParse(
+        dot == -1 ? secondsPart : secondsPart.substring(0, dot),
+      ) ??
+      0;
+  var millis = 0;
+  if (dot != -1) {
+    final fraction = secondsPart.substring(dot + 1).padRight(3, '0');
+    millis = int.tryParse(fraction.substring(0, 3)) ?? 0;
+  }
+  return Duration(
+    hours: hours,
+    minutes: minutes,
+    seconds: seconds,
+    milliseconds: millis,
+  );
+}
+
+List<SubtitleCue> parseSubtitles(String content) {
+  final normalized = content.replaceAll('\r\n', '\n').replaceAll('\r', '\n');
+  final timePattern = RegExp(
+    r'(\d{1,3}:\d{2}:\d{2}[,.]\d{1,3})\s*-->\s*(\d{1,3}:\d{2}:\d{2}[,.]\d{1,3})',
+  );
+  final blocks = normalized.split(RegExp(r'\n\s*\n'));
+  final cues = <SubtitleCue>[];
+
+  for (final block in blocks) {
+    final match = timePattern.firstMatch(block);
+    if (match == null) continue;
+    final text = block
+        .substring(match.end)
+        .trim()
+        .split('\n')
+        .map((line) => line.trim())
+        .where((line) => line.isNotEmpty)
+        .join('\n');
+    if (text.isEmpty) continue;
+    cues.add(
+      SubtitleCue(
+        start: _parseTime(match.group(1)!),
+        end: _parseTime(match.group(2)!),
+        text: text,
+      ),
+    );
+  }
+
+  cues.sort((a, b) => a.start.compareTo(b.start));
+  return cues;
+}
+
+String? cueAt(List<SubtitleCue> cues, Duration position) {
+  for (final cue in cues) {
+    if (position >= cue.start && position <= cue.end) return cue.text;
+  }
+  return null;
+}
