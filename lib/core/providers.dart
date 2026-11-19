@@ -48,7 +48,7 @@ const List<ProviderDefinition> providerDefinitions = [
   ProviderDefinition(
     kind: ProviderKind.wikimedia,
     label: 'Wikimedia Commons',
-    description: 'Audio y video con licencia libre',
+    description: 'Audio con licencia libre',
     icon: Icons.public,
     defaultEnabled: true,
   ),
@@ -73,7 +73,7 @@ const List<ProviderDefinition> providerDefinitions = [
   ProviderDefinition(
     kind: ProviderKind.pixabay,
     label: 'Pixabay',
-    description: 'Musica y video libres de regalias',
+    description: 'Musica libre de regalias',
     icon: Icons.music_note,
     requiresKey: true,
     keyLabel: 'API key',
@@ -82,7 +82,7 @@ const List<ProviderDefinition> providerDefinitions = [
   ProviderDefinition(
     kind: ProviderKind.directUrl,
     label: 'URL directa',
-    description: 'Pega un enlace a un archivo de audio o video propio',
+    description: 'Pega un enlace a un archivo de audio propio',
     icon: Icons.link,
     defaultEnabled: true,
   ),

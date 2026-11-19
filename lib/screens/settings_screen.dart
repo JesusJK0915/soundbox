@@ -146,7 +146,7 @@ class SettingsScreen extends StatelessWidget {
           title: Text('Sobre YouTube'),
           subtitle: Text(
             'YouTube no ofrece una API de descarga y sus terminos prohiben '
-            'extraer audio o video. SoundBox solo usa fuentes con licencia '
+            'extraer contenido. SoundBox solo usa fuentes con licencia '
             'o archivos que te pertenecen.',
           ),
         ),

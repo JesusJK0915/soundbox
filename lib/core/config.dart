@@ -8,7 +8,7 @@ const String pixabayApiKey = '';
 const String soundCloudClientId = '';
 
 /// YouTube no tiene API de descarga oficial y sus terminos prohiben extraer
-/// audio/video, por lo que no se incluye como fuente de descarga.
+/// contenido, por lo que no se incluye como fuente de descarga.
 const String downloadPolicy =
     'Solo fuentes legales: archivos propios, licencias Creative Commons, '
     'dominio publico y contenido con descarga autorizada.';

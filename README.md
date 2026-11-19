@@ -5,11 +5,11 @@ Tu PC solo sirve para escribir codigo y hacer `push`.
 
 ## Que hace
 
-- Importa musica y video locales y los reproduce sin conexion.
+- Importa musica local y la reproduce sin conexion (solo audio).
 - Detecta automaticamente si hay internet; si no hay, oculta la busqueda y usa solo la biblioteca local.
 - Busca en varias fuentes legales y descarga al dispositivo.
 - Descargas con progreso, pausa y reanude (`Range`).
-- Subtitulos `.srt` / `.vtt` que se adjuntan a una pista o video.
+- Subtitulos `.srt` / `.vtt` que se adjuntan a una pista.
 - Pega una **URL directa** a un archivo propio para descargarlo.
 
 ## Fuentes de descarga
@@ -19,17 +19,19 @@ Se activan y configuran en **Ajustes → Fuentes de descarga** (se guardan en el
 | Fuente | Clave | Que aporta |
 | --- | --- | --- |
 | Internet Archive | no | Creative Commons y dominio publico (activa por defecto) |
-| Wikimedia Commons | no | Audio/video con licencia libre (activa por defecto) |
+| Wikimedia Commons | no | Audio con licencia libre (activa por defecto) |
 | Jamendo | `client_id` | Musica Creative Commons |
 | SoundCloud | `client_id` | Solo pistas marcadas como descargables por su autor |
-| Pixabay | API key | Musica y video libres de regalias |
-| URL directa | no | Cualquier archivo legal al que tengas enlace |
+| Pixabay | API key | Musica libre de regalias |
+| URL directa | no | Cualquier archivo de audio legal al que tengas enlace |
+
+La app solo maneja audio: no importa ni descarga video.
 
 Las claves tambien se pueden dejar en `lib/core/config.dart` como valores por defecto.
 
 ### ¿Por que no YouTube?
 
-YouTube no expone una API de descarga y sus terminos prohiben extraer audio/video.
+YouTube no expone una API de descarga y sus terminos prohiben extraer contenido.
 Por eso SoundBox no incluye esa fuente: solo trabaja con licencias verificables,
 descargas autorizadas y archivos del usuario. Para contenido tipo YouTube puedes
 usar **Wikimedia Commons**, **Pixabay** o **Internet Archive**.

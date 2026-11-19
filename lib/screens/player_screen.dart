@@ -39,10 +39,7 @@ class PlayerScreen extends StatelessWidget {
                           ? null
                           : NetworkImage(track.artworkUrl!),
                       child: track.artworkUrl == null
-                          ? Icon(
-                              track.isVideo ? Icons.movie : Icons.music_note,
-                              size: 64,
-                            )
+                          ? const Icon(Icons.music_note, size: 64)
                           : null,
                     ),
                     const SizedBox(height: 24),

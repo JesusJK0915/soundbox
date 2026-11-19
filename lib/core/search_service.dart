@@ -25,17 +25,8 @@ class SearchService {
     '.aac',
     '.opus',
   ];
-  static const List<String> _videoExtensions = [
-    '.mp4',
-    '.mkv',
-    '.webm',
-    '.mov',
-    '.avi',
-    '.m4v',
-  ];
-
-  /// Busca en todos los proveedores activos. Si el texto es una URL directa,
-  /// la añade como pista sin consultar ningun servicio.
+  /// Busca audio en todos los proveedores activos. Si el texto es una URL
+  /// directa a un archivo de audio, la añade sin consultar ningun servicio.
   Future<List<Track>> search(String query, {int limit = 20}) async {
     final term = query.trim();
     if (term.isEmpty) return const <Track>[];
@@ -90,7 +81,7 @@ class SearchService {
     }
   }
 
-  /// Convierte una URL a un archivo de audio/video en una pista descargable.
+  /// Convierte una URL a un archivo de audio en una pista descargable.
   Track? trackFromDirectUrl(String url) {
     final uri = Uri.tryParse(url);
     if (uri == null || (uri.scheme != 'http' && uri.scheme != 'https')) {
@@ -98,10 +89,7 @@ class SearchService {
     }
     final fileName = p.basename(uri.path);
     final extension = p.extension(fileName).toLowerCase();
-    if (!_audioExtensions.contains(extension) &&
-        !_videoExtensions.contains(extension)) {
-      return null;
-    }
+    if (!_audioExtensions.contains(extension)) return null;
     return Track(
       id: 'url:$url',
       title: p.basenameWithoutExtension(fileName),
@@ -293,6 +281,8 @@ class SearchService {
       if (item['downloadable'] != true) continue;
       final sourceUrl = item['download_url']?.toString() ?? '';
       if (sourceUrl.isEmpty) continue;
+      final mime = item['content_type']?.toString() ?? '';
+      if (mime.startsWith('video/')) continue;
 
       tracks.add(
         Track(
@@ -340,10 +330,7 @@ class SearchService {
       if (sourceUrl.isEmpty) continue;
       final extension = p.extension(Uri.tryParse(sourceUrl)?.path ?? '')
           .toLowerCase();
-      if (!_audioExtensions.contains(extension) &&
-          !_videoExtensions.contains(extension)) {
-        continue;
-      }
+      if (!_audioExtensions.contains(extension)) continue;
 
       tracks.add(
         Track(
@@ -366,11 +353,10 @@ class SearchService {
 
   String? _formatFromMime(String mime, String url) {
     final extension = p.extension(Uri.tryParse(url)?.path ?? '').toLowerCase();
-    if (_audioExtensions.contains(extension) ||
-        _videoExtensions.contains(extension)) {
+    if (_audioExtensions.contains(extension)) {
       return extension.replaceFirst('.', '');
     }
-    if (mime.startsWith('audio/') || mime.startsWith('video/')) {
+    if (mime.startsWith('audio/')) {
       return mime.split('/').last.split(';').first.trim();
     }
     return null;

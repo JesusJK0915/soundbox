@@ -3,7 +3,6 @@ import 'package:provider/provider.dart';
 
 import '../core/library_service.dart';
 import '../player/player_service.dart';
-import 'video_screen.dart';
 
 class LibraryScreen extends StatelessWidget {
   const LibraryScreen({super.key});
@@ -18,7 +17,7 @@ class LibraryScreen extends StatelessWidget {
             child: Padding(
               padding: EdgeInsets.all(24),
               child: Text(
-                'Importa tu musica o video para empezar.\n'
+                'Importa tu musica para empezar.\n'
                 'Todo se guarda en este dispositivo.',
                 textAlign: TextAlign.center,
               ),
@@ -32,9 +31,7 @@ class LibraryScreen extends StatelessWidget {
           itemBuilder: (context, index) {
             final track = tracks[index];
             return ListTile(
-              leading: CircleAvatar(
-                child: Icon(track.isVideo ? Icons.movie : Icons.audiotrack),
-              ),
+              leading: const CircleAvatar(child: Icon(Icons.audiotrack)),
               title: Text(
                 track.title,
                 maxLines: 1,
@@ -45,16 +42,8 @@ class LibraryScreen extends StatelessWidget {
                 maxLines: 1,
                 overflow: TextOverflow.ellipsis,
               ),
-              onTap: () async {
-                await context.read<PlayerService>().setQueue(tracks, index: index);
-                if (track.isVideo && context.mounted) {
-                  Navigator.of(context).push(
-                    MaterialPageRoute<void>(
-                      builder: (_) => VideoScreen(track: track),
-                    ),
-                  );
-                }
-              },
+              onTap: () =>
+                  context.read<PlayerService>().setQueue(tracks, index: index),
               trailing: PopupMenuButton<String>(
                 onSelected: (value) async {
                   if (value == 'remove') {
@@ -66,19 +55,10 @@ class LibraryScreen extends StatelessWidget {
                     if (path != null) {
                       await library.attachSubtitle(track.id, path);
                     }
-                    return;
-                  }
-                  if (value == 'video') {
-                    Navigator.of(context).push(
-                      MaterialPageRoute<void>(
-                        builder: (_) => VideoScreen(track: track),
-                      ),
-                    );
                   }
                 },
                 itemBuilder: (context) => const [
                   PopupMenuItem(value: 'subtitle', child: Text('Adjuntar SUB')),
-                  PopupMenuItem(value: 'video', child: Text('Ver video')),
                   PopupMenuItem(value: 'remove', child: Text('Eliminar')),
                 ],
               ),

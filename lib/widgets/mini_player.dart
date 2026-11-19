@@ -28,7 +28,7 @@ class MiniPlayer extends StatelessWidget {
             ListTile(
               dense: true,
               leading: CircleAvatar(
-                child: Icon(track.isVideo ? Icons.movie : Icons.audiotrack),
+                child: const Icon(Icons.audiotrack),
               ),
               title: Text(
                 track.title,

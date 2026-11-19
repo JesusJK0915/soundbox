@@ -35,12 +35,6 @@ class Track {
     this.source,
   });
 
-  bool get isVideo {
-    final f = (format ?? '').toLowerCase();
-    return ['mp4', 'mkv', 'webm', 'mov', 'avi', 'm4v'].contains(f) ||
-        f == 'video';
-  }
-
   bool get isSubtitle {
     final f = (format ?? '').toLowerCase();
     return ['srt', 'vtt'].contains(f);

@@ -100,26 +100,10 @@ class _LibraryFab extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Column(
-      mainAxisSize: MainAxisSize.min,
-      children: [
-        FloatingActionButton(
-          heroTag: 'import-video',
-          mini: true,
-          tooltip: 'Importar video',
-          onPressed: () =>
-              context.read<LibraryService>().importFiles(video: true),
-          child: const Icon(Icons.movie),
-        ),
-        const SizedBox(height: 10),
-        FloatingActionButton(
-          heroTag: 'import-audio',
-          tooltip: 'Importar musica',
-          onPressed: () =>
-              context.read<LibraryService>().importFiles(video: false),
-          child: const Icon(Icons.audiotrack),
-        ),
-      ],
+    return FloatingActionButton(
+      tooltip: 'Importar musica',
+      onPressed: () => context.read<LibraryService>().importFiles(),
+      child: const Icon(Icons.audiotrack),
     );
   }
 }

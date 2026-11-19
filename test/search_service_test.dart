@@ -13,6 +13,13 @@ void main() {
     expect(results.single.source, 'URL directa');
   });
 
+  test('una URL de video no se acepta como pista', () async {
+    final service = SearchService(ProviderSettingsService());
+    final results = await service.search('https://ejemplo.org/mi-video.mp4');
+
+    expect(results, isEmpty);
+  });
+
   test('los proveedores sin clave no se activan solos', () {
     final settings = ProviderSettingsService();
     final active = settings.activeSearchProviders;

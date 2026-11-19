@@ -9,6 +9,19 @@ import 'package:shared_preferences/shared_preferences.dart';
 
 import 'models.dart';
 
+const _videoFormats = <String>{
+  'mp4',
+  'mkv',
+  'webm',
+  'mov',
+  'avi',
+  'm4v',
+  'video',
+};
+
+bool _isVideoFormat(String? format) =>
+    _videoFormats.contains((format ?? '').toLowerCase().replaceFirst('.', ''));
+
 class LibraryService extends ChangeNotifier {
   static const _storageKey = 'soundbox_tracks_v1';
 
@@ -16,7 +29,6 @@ class LibraryService extends ChangeNotifier {
 
   late final Directory rootDir;
   late final Directory audioDir;
-  late final Directory videoDir;
   late final Directory downloadDir;
   late final Directory subtitleDir;
 
@@ -32,12 +44,17 @@ class LibraryService extends ChangeNotifier {
     final docs = await getApplicationDocumentsDirectory();
     rootDir = Directory(p.join(docs.path, 'soundbox'));
     audioDir = Directory(p.join(rootDir.path, 'audio'));
-    videoDir = Directory(p.join(rootDir.path, 'video'));
     downloadDir = Directory(p.join(rootDir.path, 'downloads'));
     subtitleDir = Directory(p.join(rootDir.path, 'subtitles'));
 
-    for (final dir in [audioDir, videoDir, downloadDir, subtitleDir]) {
+    for (final dir in [audioDir, downloadDir, subtitleDir]) {
       await dir.create(recursive: true);
+    }
+
+    // Versiones anteriores guardaban videos: se retiran y se borra su carpeta.
+    final legacyVideoDir = Directory(p.join(rootDir.path, 'video'));
+    if (await legacyVideoDir.exists()) {
+      await legacyVideoDir.delete(recursive: true);
     }
 
     final raw = _prefs.getStringList(_storageKey) ?? <String>[];
@@ -46,24 +63,25 @@ class LibraryService extends ChangeNotifier {
       ..addAll(
         raw
             .map((value) => jsonDecode(value) as Map<String, dynamic>)
-            .map(Track.fromJson),
+            .map(Track.fromJson)
+            .where((track) => !_isVideoFormat(track.format)),
       );
-    notifyListeners();
+    await _persist();
   }
 
-  Future<void> importFiles({required bool video}) async {
+  Future<void> importFiles() async {
     final result = await FilePicker.platform.pickFiles(
       allowMultiple: true,
-      type: video ? FileType.video : FileType.audio,
+      type: FileType.audio,
     );
     if (result == null) return;
 
     for (final file in result.files) {
       final path = file.path;
-      if (path == null) continue;
+      if (path == null || _isVideoFormat(p.extension(path))) continue;
       await _copyToLibrary(
         sourcePath: path,
-        targetDir: video ? videoDir : audioDir,
+        targetDir: audioDir,
         downloaded: false,
       );
     }
@@ -104,6 +122,7 @@ class LibraryService extends ChangeNotifier {
       license: old.license,
       subtitlePath: target,
       downloaded: old.downloaded,
+      source: old.source,
     );
     await _persist();
   }

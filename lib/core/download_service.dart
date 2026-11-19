@@ -31,6 +31,7 @@ class DownloadService extends ChangeNotifier {
 
   Future<void> start(Track track) async {
     if (isDownloading(track.id)) return;
+    if (_isVideoFormat(track.format)) return;
 
     final extension = _extensionFor(track);
     final safeName = _safeName(track.title);
@@ -136,10 +137,16 @@ class DownloadService extends ChangeNotifier {
     return cleaned.isEmpty ? 'pista' : cleaned;
   }
 
+  bool _isVideoFormat(String? format) {
+    final value = (format ?? '').replaceFirst('.', '').toLowerCase();
+    return ['mp4', 'mkv', 'webm', 'mov', 'avi', 'm4v', 'video']
+        .contains(value);
+  }
+
   String _extensionFor(Track track) {
     final format = (track.format ?? '').replaceFirst('.', '').toLowerCase();
     if (format.isEmpty) return '.mp3';
-    if (['mp3', 'ogg', 'm4a', 'flac', 'wav', 'mp4', 'webm', 'mkv']
+    if (['mp3', 'ogg', 'm4a', 'flac', 'wav', 'aac', 'opus']
         .contains(format)) {
       return '.$format';
     }
