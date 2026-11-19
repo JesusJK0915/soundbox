@@ -162,7 +162,7 @@ class LibraryService extends ChangeNotifier {
     final result = await FilePicker.platform.pickFiles(
       allowMultiple: false,
       type: FileType.custom,
-      allowedExtensions: const ['srt', 'vtt', 'lrc'],
+      allowedExtensions: const ['srt', 'vtt'],
     );
     return result?.files.single.path;
   }
@@ -178,17 +178,6 @@ class LibraryService extends ChangeNotifier {
     );
     await File(sourcePath).copy(target);
 
-    _tracks[index] = _tracks[index].copyWith(subtitlePath: target);
-    await _persist();
-  }
-
-  /// Guarda una letra LRC obtenida de LRCLIB y la asocia a la pista.
-  Future<void> attachLyrics(String trackId, String content) async {
-    final index = _tracks.indexWhere((t) => t.id == trackId);
-    if (index == -1) return;
-    final safeId = trackId.replaceAll(RegExp(r'[^a-zA-Z0-9_-]'), '_');
-    final target = p.join(subtitleDir.path, '$safeId.lrc');
-    await File(target).writeAsString(content);
     _tracks[index] = _tracks[index].copyWith(subtitlePath: target);
     await _persist();
   }

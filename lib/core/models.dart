@@ -70,7 +70,7 @@ class Track {
 
   bool get isSubtitle {
     final f = (format ?? '').toLowerCase();
-    return ['srt', 'vtt', 'lrc'].contains(f);
+    return ['srt', 'vtt'].contains(f);
   }
 
   Track copyWith({

@@ -8,17 +8,12 @@ import 'package:permission_handler/permission_handler.dart';
 import 'package:provider/provider.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
-import 'core/artwork_palette_service.dart';
 import 'core/config.dart';
 import 'core/connectivity_service.dart';
 import 'core/download_service.dart';
 import 'core/download_settings.dart';
 import 'core/export_service.dart';
 import 'core/library_service.dart';
-import 'core/library_tools.dart';
-import 'core/listening_stats.dart';
-import 'core/lyrics_service.dart';
-import 'core/playlist_export.dart';
 import 'core/providers.dart';
 import 'core/theme_settings.dart';
 import 'core/update_service.dart';
@@ -44,16 +39,11 @@ Future<void> main() async {
   final sources = await ProviderSettingsService.load();
   final quality = await DownloadSettingsService.load();
   final themeSettings = await ThemeSettingsService.load();
-  final artworkPalette = ArtworkPaletteService();
   final userPrefs = await UserPreferencesService.load();
   final updates = UpdateService(prefs);
   final export = ExportService(prefs);
   final downloads = DownloadService(library, quality);
-  final lyrics = LyricsService();
-  final tools = LibraryToolsService(prefs);
-  final stats = ListeningStatsService(prefs);
-  final playlistExport = PlaylistExportService(prefs);
-  final player = PlayerService(connectivity, userPrefs, library, lyrics, stats);
+  final player = PlayerService(connectivity, userPrefs);
 
   final session = await AudioSession.instance;
   await session.configure(const AudioSessionConfiguration.music());
@@ -69,13 +59,8 @@ Future<void> main() async {
       export: export,
       quality: quality,
       themeSettings: themeSettings,
-      artworkPalette: artworkPalette,
       userPrefs: userPrefs,
       updates: updates,
-      lyrics: lyrics,
-      tools: tools,
-      stats: stats,
-      playlistExport: playlistExport,
     ),
   );
 
@@ -96,13 +81,8 @@ class SoundBoxApp extends StatefulWidget {
     required this.export,
     required this.quality,
     required this.themeSettings,
-    required this.artworkPalette,
     required this.userPrefs,
     required this.updates,
-    required this.lyrics,
-    required this.tools,
-    required this.stats,
-    required this.playlistExport,
   });
 
   final SharedPreferences prefs;
@@ -114,13 +94,8 @@ class SoundBoxApp extends StatefulWidget {
   final ExportService export;
   final DownloadSettingsService quality;
   final ThemeSettingsService themeSettings;
-  final ArtworkPaletteService artworkPalette;
   final UserPreferencesService userPrefs;
   final UpdateService updates;
-  final LyricsService lyrics;
-  final LibraryToolsService tools;
-  final ListeningStatsService stats;
-  final PlaylistExportService playlistExport;
 
   @override
   State<SoundBoxApp> createState() => _SoundBoxAppState();
@@ -163,17 +138,10 @@ class _SoundBoxAppState extends State<SoundBoxApp> {
         ChangeNotifierProvider<ThemeSettingsService>.value(
           value: widget.themeSettings,
         ),
-        ChangeNotifierProvider<ArtworkPaletteService>.value(
-          value: widget.artworkPalette,
-        ),
         ChangeNotifierProvider<UserPreferencesService>.value(
           value: widget.userPrefs,
         ),
         ChangeNotifierProvider<UpdateService>.value(value: widget.updates),
-        Provider<LyricsService>.value(value: widget.lyrics),
-        ChangeNotifierProvider<LibraryToolsService>.value(value: widget.tools),
-        ChangeNotifierProvider<ListeningStatsService>.value(value: widget.stats),
-        Provider<PlaylistExportService>.value(value: widget.playlistExport),
       ],
       child: Consumer2<ThemeSettingsService, UserPreferencesService>(
         builder: (context, themeSettings, userPrefs, _) {

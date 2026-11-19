@@ -1,9 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:provider/provider.dart';
 
-import '../core/connectivity_service.dart';
-import '../core/library_service.dart';
-import '../core/lyrics_service.dart';
 import '../core/models.dart';
 
 /// Muestra todos los campos conocidos de una pista, incluidas las etiquetas
@@ -56,62 +52,6 @@ Future<void> showTrackDetails(BuildContext context, Track track) async {
                   ],
                 ),
               ),
-              Padding(
-                padding: const EdgeInsets.symmetric(horizontal: 20),
-                child: Row(
-                  children: [
-                    Expanded(
-                      child: OutlinedButton.icon(
-                        onPressed: () async {
-                          final library = context.read<LibraryService>();
-                          final path = await library.pickSubtitlePath();
-                          if (path == null) return;
-                          await library.attachSubtitle(track.id, path);
-                          if (context.mounted) Navigator.of(context).pop();
-                        },
-                        icon: const Icon(Icons.attach_file),
-                        label: const Text('Adjuntar letra'),
-                      ),
-                    ),
-                    const SizedBox(width: 8),
-                    Expanded(
-                      child: FilledButton.icon(
-                        onPressed: () async {
-                          if (!context.read<ConnectivityService>().isOnline) {
-                            ScaffoldMessenger.of(context).showSnackBar(
-                              const SnackBar(
-                                content: Text('Sin conexión a LRCLIB'),
-                              ),
-                            );
-                            return;
-                          }
-                          final lyricsService = context.read<LyricsService>();
-                          final library = context.read<LibraryService>();
-                          final result = await lyricsService.fetch(track);
-                          final content = result?.lrcContent;
-                          if (content != null) {
-                            await library.attachLyrics(track.id, content);
-                          }
-                          if (context.mounted) {
-                            ScaffoldMessenger.of(context).showSnackBar(
-                              SnackBar(
-                                content: Text(
-                                  content != null
-                                      ? 'Letra guardada desde LRCLIB'
-                                      : 'No se encontró letra para esta canción',
-                                ),
-                              ),
-                            );
-                          }
-                        },
-                        icon: const Icon(Icons.cloud_download_outlined),
-                        label: const Text('Buscar letras'),
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-              const SizedBox(height: 8),
               Expanded(
                 child: ListView.separated(
                   controller: controller,

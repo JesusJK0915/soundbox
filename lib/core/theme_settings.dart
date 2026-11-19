@@ -5,40 +5,25 @@ import 'package:shared_preferences/shared_preferences.dart';
 /// desde Ajustes y la app se redibuja al instante.
 class ThemeSettingsService extends ChangeNotifier {
   static const wallpaperColorsKey = 'theme.wallpaper_colors';
-  static const artworkColorsKey = 'theme.artwork_colors';
   static const defaultWallpaperColors = true;
-  static const defaultArtworkColors = true;
 
   ThemeSettingsService([SharedPreferences? prefs]) : _prefs = prefs {
     _wallpaperColors =
         _prefs?.getBool(wallpaperColorsKey) ?? defaultWallpaperColors;
-    _artworkColors =
-        _prefs?.getBool(artworkColorsKey) ?? defaultArtworkColors;
   }
 
   final SharedPreferences? _prefs;
   late bool _wallpaperColors;
-  late bool _artworkColors;
 
   static Future<ThemeSettingsService> load() async =>
       ThemeSettingsService(await SharedPreferences.getInstance());
 
   bool get wallpaperColors => _wallpaperColors;
-  bool get artworkColors => _artworkColors;
 
   void setWallpaperColors(bool value) {
     if (_wallpaperColors == value) return;
     _wallpaperColors = value;
     _prefs?.setBool(wallpaperColorsKey, value);
-    notifyListeners();
-  }
-
-  /// When enabled, the current track's cover art seeds a Material You palette
-  /// that replaces the wallpaper palette just in the player surfaces.
-  void setArtworkColors(bool value) {
-    if (_artworkColors == value) return;
-    _artworkColors = value;
-    _prefs?.setBool(artworkColorsKey, value);
     notifyListeners();
   }
 }
