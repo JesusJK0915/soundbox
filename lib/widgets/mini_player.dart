@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
 import '../core/player_theme.dart';
+import '../core/user_preferences.dart';
 import '../player/player_service.dart';
 import '../screens/player_screen.dart';
 import 'track_artwork.dart';
@@ -11,8 +12,8 @@ class MiniPlayer extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Consumer<PlayerService>(
-      builder: (context, player, _) {
+    return Consumer2<PlayerService, UserPreferencesService>(
+      builder: (context, player, prefs, _) {
         final track = player.currentTrack;
         if (track == null) return const SizedBox.shrink();
 
@@ -42,6 +43,9 @@ class MiniPlayer extends StatelessWidget {
                     ),
                   );
                 },
+                onDoubleTap: prefs.doubleTapFavorite && track != null
+                    ? () => prefs.toggleFavorite(track.id)
+                    : null,
                 child: Column(
                   mainAxisSize: MainAxisSize.min,
                   children: [

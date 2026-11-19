@@ -332,6 +332,73 @@ class SettingsScreen extends StatelessWidget {
           ),
         ),
         const Divider(),
+        Text(
+          'Letras y reproducción',
+          style: Theme.of(context).textTheme.titleMedium,
+        ),
+        Consumer<UserPreferencesService>(
+          builder: (context, prefs, _) => Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              SwitchListTile(
+                secondary: const Icon(Icons.short_text),
+                title: const Text('Buscar letras automáticamente'),
+                subtitle: const Text(
+                  'Consulta LRCLIB al cambiar de canción y guarda la letra '
+                  'sincronizada (.lrc) para mostrarla sin conexión.',
+                ),
+                value: prefs.autoLyrics,
+                onChanged: prefs.setAutoLyrics,
+              ),
+              SwitchListTile(
+                secondary: const Icon(Icons.text_fields),
+                title: const Text('Resaltar letra activa'),
+                subtitle: const Text(
+                  'Marca con ♪ la línea que suena en cada momento.',
+                ),
+                value: prefs.lyricsKaraoke,
+                onChanged: prefs.setLyricsKaraoke,
+              ),
+              ListTile(
+                leading: const Icon(Icons.font_download_outlined),
+                title: const Text('Tamaño de la letra'),
+                subtitle: Text('${prefs.lyricFont.round().toInt()} px'),
+                trailing: SizedBox(
+                  width: 140,
+                  child: Slider(
+                    min: 16,
+                    max: 34,
+                    divisions: 18,
+                    value: prefs.lyricFont,
+                    onChanged: prefs.setLyricFont,
+                  ),
+                ),
+              ),
+              SwitchListTile(
+                secondary: const Icon(Icons.shuffle_on_outlined),
+                title: const Text('Aleatorio sesgado'),
+                subtitle: const Text(
+                  'Al mezclar la cola prioriza favoritas y más escuchadas.',
+                ),
+                value: prefs.shuffleBiased,
+                onChanged: prefs.setShuffleBiased,
+              ),
+              SwitchListTile(
+                secondary: const Icon(Icons.replay),
+                title: const Text('Recordar aleatorio y velocidad'),
+                subtitle: const Text(
+                  'Conserva el modo aleatorio y la velocidad al reiniciar.',
+                ),
+                value: prefs.rememberShuffle && prefs.rememberSpeed,
+                onChanged: (value) {
+                  prefs.setRememberShuffle(value);
+                  prefs.setRememberSpeed(value);
+                },
+              ),
+            ],
+          ),
+        ),
+        const Divider(),
         Consumer2<LibraryService, UserPreferencesService>(
           builder: (context, library, prefs, _) => Column(
             crossAxisAlignment: CrossAxisAlignment.start,

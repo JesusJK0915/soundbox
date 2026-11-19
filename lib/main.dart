@@ -15,6 +15,8 @@ import 'core/download_service.dart';
 import 'core/download_settings.dart';
 import 'core/export_service.dart';
 import 'core/library_service.dart';
+import 'core/library_tools.dart';
+import 'core/lyrics_service.dart';
 import 'core/providers.dart';
 import 'core/theme_settings.dart';
 import 'core/update_service.dart';
@@ -45,7 +47,9 @@ Future<void> main() async {
   final updates = UpdateService(prefs);
   final export = ExportService(prefs);
   final downloads = DownloadService(library, quality);
-  final player = PlayerService(connectivity, userPrefs);
+  final lyrics = LyricsService();
+  final player = PlayerService(connectivity, userPrefs, library, lyrics);
+  final tools = LibraryToolsService(prefs);
 
   final session = await AudioSession.instance;
   await session.configure(const AudioSessionConfiguration.music());
@@ -64,6 +68,8 @@ Future<void> main() async {
       artworkPalette: artworkPalette,
       userPrefs: userPrefs,
       updates: updates,
+      lyrics: lyrics,
+      tools: tools,
     ),
   );
 
@@ -87,6 +93,8 @@ class SoundBoxApp extends StatefulWidget {
     required this.artworkPalette,
     required this.userPrefs,
     required this.updates,
+    required this.lyrics,
+    required this.tools,
   });
 
   final SharedPreferences prefs;
@@ -101,6 +109,8 @@ class SoundBoxApp extends StatefulWidget {
   final ArtworkPaletteService artworkPalette;
   final UserPreferencesService userPrefs;
   final UpdateService updates;
+  final LyricsService lyrics;
+  final LibraryToolsService tools;
 
   @override
   State<SoundBoxApp> createState() => _SoundBoxAppState();
@@ -150,6 +160,8 @@ class _SoundBoxAppState extends State<SoundBoxApp> {
           value: widget.userPrefs,
         ),
         ChangeNotifierProvider<UpdateService>.value(value: widget.updates),
+        Provider<LyricsService>.value(value: widget.lyrics),
+        ChangeNotifierProvider<LibraryToolsService>.value(value: widget.tools),
       ],
       child: Consumer2<ThemeSettingsService, UserPreferencesService>(
         builder: (context, themeSettings, userPrefs, _) {

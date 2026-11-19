@@ -34,16 +34,59 @@ Duration _parseTime(String raw) {
   );
 }
 
-List<SubtitleCue> parseSubtitles(String content) {
+final RegExp _vttTime = RegExp(
+  r'(\d{1,3}:\d{2}:\d{2}[,.]\d{1,3})\s*-->\s*(\d{1,3}:\d{2}:\d{2}[,.]\d{1,3})',
+);
+
+final RegExp _lrcTime = RegExp(r'\[(\d{1,3}):(\d{2})(?:[.:](\d{1,3}))?\]');
+
+bool looksLikeLrc(String content) =>
+    _lrcTime.hasMatch(content) && !_vttTime.hasMatch(content);
+
+List<SubtitleCue> parseLrc(String content) {
   final normalized = content.replaceAll('\r\n', '\n').replaceAll('\r', '\n');
-  final timePattern = RegExp(
-    r'(\d{1,3}:\d{2}:\d{2}[,.]\d{1,3})\s*-->\s*(\d{1,3}:\d{2}:\d{2}[,.]\d{1,3})',
-  );
+  final raw = <SubtitleCue>[];
+
+  for (final line in normalized.split('\n')) {
+    final matches = _lrcTime.allMatches(line).toList();
+    if (matches.isEmpty) continue;
+    final start = _parseTime(
+      '0:${matches.first.group(1)!}:${matches.first.group(2)!}'
+      '.${(matches.first.group(3) ?? '0').padRight(3, '0').substring(0, 3)}',
+    );
+    final textStart = matches.last.end;
+    final text = line.substring(textStart).trim();
+    if (text.isEmpty) continue;
+    for (final _ in matches) {
+      raw.add(SubtitleCue(start: start, end: start, text: text));
+    }
+  }
+
+  for (var i = 0; i < raw.length; i++) {
+    if (raw[i].end != raw[i].start) continue;
+    var end = raw[i].start + const Duration(seconds: 4);
+    for (var j = i + 1; j < raw.length; j++) {
+      if (raw[j].start > raw[i].start) {
+        end = raw[j].start;
+        break;
+      }
+    }
+    raw[i] = SubtitleCue(start: raw[i].start, end: end, text: raw[i].text);
+  }
+
+  raw.sort((a, b) => a.start.compareTo(b.start));
+  return raw;
+}
+
+List<SubtitleCue> parseSubtitles(String content) {
+  if (looksLikeLrc(content)) return parseLrc(content);
+
+  final normalized = content.replaceAll('\r\n', '\n').replaceAll('\r', '\n');
   final blocks = normalized.split(RegExp(r'\n\s*\n'));
   final cues = <SubtitleCue>[];
 
   for (final block in blocks) {
-    final match = timePattern.firstMatch(block);
+    final match = _vttTime.firstMatch(block);
     if (match == null) continue;
     final text = block
         .substring(match.end)

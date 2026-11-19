@@ -14,6 +14,7 @@ import 'downloads_screen.dart';
 import 'library_screen.dart';
 import 'search_screen.dart';
 import 'settings_screen.dart';
+import 'tools_screen.dart';
 
 class HomeScreen extends StatefulWidget {
   const HomeScreen({super.key});
@@ -30,6 +31,7 @@ class _HomeScreenState extends State<HomeScreen> {
     LibraryScreen(),
     SearchScreen(),
     DownloadsScreen(),
+    ToolsScreen(),
     SettingsScreen(),
   ];
 
@@ -180,6 +182,11 @@ class _HomeScreenState extends State<HomeScreen> {
                 icon: Icon(Icons.download_outlined),
                 selectedIcon: Icon(Icons.download),
                 label: 'Descargas',
+              ),
+              NavigationDestination(
+                icon: Icon(Icons.construction_outlined),
+                selectedIcon: Icon(Icons.construction),
+                label: 'Herramientas',
               ),
               NavigationDestination(
                 icon: Icon(Icons.settings_outlined),

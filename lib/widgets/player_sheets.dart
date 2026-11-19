@@ -1,7 +1,14 @@
+import 'dart:io';
+
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
+import '../core/connectivity_service.dart';
+import '../core/library_service.dart';
+import '../core/lyrics_service.dart';
 import '../core/models.dart';
+import '../core/subtitle_parser.dart';
+import '../core/user_preferences.dart';
 import '../player/player_service.dart';
 
 Future<void> _showSheet(
@@ -182,11 +189,100 @@ Future<void> showSleepSheet(BuildContext context) {
   });
 }
 
-/// Letra incrustada en los metadatos del archivo.
+/// Letra sincronizada, incrustada o descargada de LRCLIB.
 Future<void> showLyricsSheet(BuildContext context, Track track) {
-  final lyrics = track.extraTags?['Letra'];
-  return _showSheet(context, (context) {
+  return _showSheet(
+    context,
+    (context) => _LyricsSheet(track: track),
+  );
+}
+
+class _LyricsSheet extends StatefulWidget {
+  const _LyricsSheet({required this.track});
+
+  final Track track;
+
+  @override
+  State<_LyricsSheet> createState() => _LyricsSheetState();
+}
+
+class _LyricsSheetState extends State<_LyricsSheet> {
+  String? _content;
+  String? _source;
+  bool _loading = false;
+  String? _error;
+
+  @override
+  void initState() {
+    super.initState();
+    _loadLocal();
+  }
+
+  Future<void> _loadLocal() async {
+    final path = widget.track.subtitlePath;
+    if (path != null && await File(path).exists()) {
+      _content = await File(path).readAsString();
+      _source = 'Archivo local';
+    } else {
+      final embedded = widget.track.extraTags?['Letra'];
+      if (embedded != null && embedded.trim().isNotEmpty) {
+        _content = embedded;
+        _source = 'Metadatos del archivo';
+      }
+    }
+    if (mounted) setState(() {});
+  }
+
+  Future<void> _search() async {
+    final online = context.read<ConnectivityService>().isOnline;
+    if (!online) {
+      setState(() => _error = 'Sin conexión: no se puede consultar LRCLIB.');
+      return;
+    }
+    setState(() {
+      _loading = true;
+      _error = null;
+    });
+    final result = await context.read<LyricsService>().fetch(widget.track);
+    if (!mounted) return;
+    if (result == null) {
+      setState(() {
+        _loading = false;
+        _error = 'No se encontró letra para esta canción.';
+      });
+      return;
+    }
+    final content = result.lrcContent;
+    if (content == null) {
+      setState(() {
+        _loading = false;
+        _error = result.instrumental
+            ? 'LRCLIB marca esta canción como instrumental.'
+            : 'LRCLIB no devolvió letra para esta canción.';
+      });
+      return;
+    }
+    await context.read<LibraryService>().attachLyrics(widget.track.id, content);
+    if (!mounted) return;
+    setState(() {
+      _content = content;
+      _source = 'LRCLIB · ${result.artistName}';
+      _loading = false;
+    });
+  }
+
+  @override
+  Widget build(BuildContext context) {
     final scheme = Theme.of(context).colorScheme;
+    final prefs = context.watch<UserPreferencesService>();
+    final fontSize = prefs.lyricFont;
+    final karaokeEnabled = prefs.lyricsKaraoke;
+    final cues = _content == null ? const <SubtitleCue>[] : parseSubtitles(_content!);
+    final text = cues.isEmpty
+        ? _content!.trim()
+        : cues.map((cue) => cue.text).join('\n');
+    final karaoke = context.watch<PlayerService>().positionStream;
+
     return _sheetFrame(
       context,
       Column(
@@ -198,10 +294,28 @@ Future<void> showLyricsSheet(BuildContext context, Track track) {
             child: Row(
               children: [
                 Expanded(
-                  child: Text(
-                    'Letra',
-                    style: Theme.of(context).textTheme.titleLarge,
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text('Letra', style: Theme.of(context).textTheme.titleLarge),
+                      if (_source != null)
+                        Text(
+                          _source!,
+                          style: Theme.of(context).textTheme.bodySmall,
+                        ),
+                    ],
                   ),
+                ),
+                IconButton(
+                  tooltip: 'Buscar en LRCLIB',
+                  icon: _loading
+                      ? const SizedBox(
+                          width: 20,
+                          height: 20,
+                          child: CircularProgressIndicator(strokeWidth: 2),
+                        )
+                      : const Icon(Icons.cloud_download_outlined),
+                  onPressed: _loading ? null : _search,
                 ),
                 IconButton(
                   icon: const Icon(Icons.close_rounded),
@@ -210,28 +324,47 @@ Future<void> showLyricsSheet(BuildContext context, Track track) {
               ],
             ),
           ),
-          Flexible(
-            child: SingleChildScrollView(
-              padding: const EdgeInsets.fromLTRB(24, 4, 24, 28),
+          if (_error != null)
+            Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 24),
               child: Text(
-                lyrics?.trim().isNotEmpty == true
-                    ? lyrics!
-                    : 'Esta canción no tiene letra incrustada en sus '
-                        'metadatos.\n\nPuedes añadir etiquetas de letra a tus '
-                        'archivos con cualquier editor de MP3 y volver a '
-                        'leer los metadatos desde Ajustes.',
-                style: TextStyle(
-                  color: scheme.onSurface,
-                  fontSize: 16,
-                  height: 1.5,
-                ),
+                _error!,
+                style: TextStyle(color: scheme.error),
               ),
+            ),
+          Flexible(
+            child: StreamBuilder<Duration>(
+              stream: karaoke,
+              initialData: Duration.zero,
+              builder: (context, snapshot) {
+                final position = snapshot.data ?? Duration.zero;
+                final active = cueAt(cues, position);
+                final displayed = karaokeEnabled && active != null
+                    ? cues.map((cue) => cue.text == active ? '♪ $active' : cue.text).join('\n')
+                    : text;
+                return SingleChildScrollView(
+                  padding: const EdgeInsets.fromLTRB(24, 4, 24, 28),
+                  child: Text(
+                    displayed.isNotEmpty
+                        ? displayed
+                        : 'Toca el icono de nube para buscar la letra '
+                            'automáticamente en LRCLIB.\n\nTambién puedes '
+                            'adjuntar un archivo .lrc, .srt o .vtt desde la '
+                            'ficha de la canción.',
+                    style: TextStyle(
+                      color: scheme.onSurface,
+                      fontSize: fontSize,
+                      height: 1.5,
+                    ),
+                  ),
+                );
+              },
             ),
           ),
         ],
       ),
     );
-  });
+  }
 }
 
 String _formatRemaining(Duration? value) {
