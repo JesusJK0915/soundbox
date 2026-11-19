@@ -2,6 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:just_audio/just_audio.dart';
 import 'package:provider/provider.dart';
 
+import '../core/models.dart';
+import '../core/player_theme.dart';
 import '../player/player_service.dart';
 import '../widgets/subtitle_overlay.dart';
 
@@ -13,151 +15,521 @@ class PlayerScreen extends StatelessWidget {
     return Consumer<PlayerService>(
       builder: (context, player, _) {
         final track = player.currentTrack;
-        if (track == null) {
-          return Scaffold(
-            appBar: AppBar(title: const Text('Reproductor')),
-            body: const Center(child: Text('No hay pista activa')),
-          );
-        }
+        if (track == null) return const _EmptyPlayer();
 
+        final scheme = playerColorScheme(track, Theme.of(context).brightness);
         final duration = player.duration ?? Duration.zero;
         final maxMs = duration.inMilliseconds < 1 ? 1 : duration.inMilliseconds;
         final currentMs = player.position.inMilliseconds.clamp(0, maxMs);
 
-        return Scaffold(
-          appBar: AppBar(title: const Text('Reproductor')),
-          body: Stack(
-            children: [
-              Padding(
-                padding: const EdgeInsets.all(20),
-                child: Column(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  children: [
-                    CircleAvatar(
-                      radius: 72,
-                      backgroundImage: track.artworkUrl == null
-                          ? null
-                          : NetworkImage(track.artworkUrl!),
-                      child: track.artworkUrl == null
-                          ? const Icon(Icons.music_note, size: 64)
-                          : null,
-                    ),
-                    const SizedBox(height: 24),
-                    Text(
-                      track.title,
-                      textAlign: TextAlign.center,
-                      style: Theme.of(context).textTheme.headlineSmall,
-                    ),
-                    const SizedBox(height: 6),
-                    Text(track.artist,
-                        style: Theme.of(context).textTheme.bodyLarge),
-                    const SizedBox(height: 24),
-                    Slider(
-                      value: currentMs.toDouble(),
-                      max: maxMs.toDouble(),
-                      onChanged: (value) =>
-                          player.seek(Duration(milliseconds: value.toInt())),
-                    ),
-                    Padding(
-                      padding: const EdgeInsets.symmetric(horizontal: 16),
-                      child: Row(
-                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                        children: [
-                          Text(_format(player.position)),
-                          Text(_format(duration)),
-                        ],
-                      ),
-                    ),
-                    const SizedBox(height: 16),
-                    Row(
-                      mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-                      children: [
-                        IconButton(
-                          icon: Icon(
-                            Icons.shuffle,
-                            color: player.shuffle ? Colors.deepPurple : null,
-                          ),
-                          onPressed: player.toggleShuffle,
-                        ),
-                        IconButton(
-                          icon: const Icon(Icons.skip_previous, size: 36),
-                          onPressed: player.skipPrevious,
-                        ),
-                        CircleAvatar(
-                          radius: 32,
-                          child: IconButton(
-                            icon: Icon(
-                              player.isPlaying ? Icons.pause : Icons.play_arrow,
-                              size: 32,
-                            ),
-                            onPressed: () => player.isPlaying
-                                ? player.pause()
-                                : player.play(),
-                          ),
-                        ),
-                        IconButton(
-                          icon: const Icon(Icons.skip_next, size: 36),
-                          onPressed: player.skipNext,
-                        ),
-                        IconButton(
-                          icon: Icon(
-                            Icons.repeat,
-                            color: player.loopMode != LoopMode.off
-                                ? Colors.deepPurple
-                                : null,
-                          ),
-                          onPressed: player.toggleLoop,
-                        ),
-                      ],
-                    ),
-                    const SizedBox(height: 16),
-                    const _VolumeControl(),
-                    const SizedBox(height: 12),
-                    SizedBox(
-                      height: 100,
-                      child: ListView.builder(
-                        scrollDirection: Axis.horizontal,
-                        itemCount: player.queue.length,
-                        itemBuilder: (context, index) {
-                          final item = player.queue[index];
-                          return SizedBox(
-                            width: 140,
-                            child: ListTile(
-                              dense: true,
-                              title: Text(
-                                item.title,
-                                maxLines: 1,
-                                overflow: TextOverflow.ellipsis,
-                              ),
-                              onTap: () => player.playIndex(index),
-                            ),
-                          );
-                        },
-                      ),
-                    ),
-                  ],
+        return Theme(
+          data: Theme.of(context).copyWith(
+            colorScheme: scheme,
+            scaffoldBackgroundColor: scheme.surface,
+          ),
+          child: Scaffold(
+            extendBodyBehindAppBar: true,
+            appBar: AppBar(
+              backgroundColor: Colors.transparent,
+              elevation: 0,
+              surfaceTintColor: Colors.transparent,
+              leading: Padding(
+                padding: const EdgeInsets.all(8),
+                child: IconButton(
+                  tooltip: 'Volver',
+                  style: IconButton.styleFrom(
+                    backgroundColor: scheme.secondaryContainer,
+                    foregroundColor: scheme.onSecondaryContainer,
+                    shape: const StadiumBorder(),
+                  ),
+                  icon: const Icon(Icons.keyboard_arrow_down_rounded),
+                  onPressed: () => Navigator.of(context).maybePop(),
                 ),
               ),
-              SubtitleOverlay(
-                subtitlePath: track.subtitlePath,
-                position: player.position,
-              ),
-            ],
+              title: const Text('Suena ahora'),
+              actions: [
+                Padding(
+                  padding: const EdgeInsets.only(right: 20),
+                  child: _PlayingBars(isPlaying: player.isPlaying),
+                ),
+              ],
+            ),
+            body: Stack(
+              children: [
+                _AmbientBackground(
+                  scheme: scheme,
+                  isPlaying: player.isPlaying,
+                ),
+                SafeArea(
+                  child: LayoutBuilder(
+                    builder: (context, constraints) {
+                      return SingleChildScrollView(
+                        child: ConstrainedBox(
+                          constraints: BoxConstraints(
+                            minHeight: constraints.maxHeight,
+                          ),
+                          child: Padding(
+                            padding: const EdgeInsets.fromLTRB(20, 76, 20, 28),
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.stretch,
+                              children: [
+                                Center(
+                                  child: _HeroArtwork(
+                                    track: track,
+                                    isPlaying: player.isPlaying,
+                                  ),
+                                ),
+                                const SizedBox(height: 28),
+                                AnimatedSwitcher(
+                                  duration: const Duration(milliseconds: 350),
+                                  switchInCurve: Curves.easeOutCubic,
+                                  child: _TrackInfo(
+                                    key: ValueKey<String>(track.id),
+                                    track: track,
+                                  ),
+                                ),
+                                const SizedBox(height: 12),
+                                _MetaChips(track: track),
+                                const SizedBox(height: 28),
+                                _Progress(
+                                  currentMs: currentMs,
+                                  maxMs: maxMs,
+                                  position: player.position,
+                                  duration: duration,
+                                  onSeek: player.seek,
+                                ),
+                                const SizedBox(height: 20),
+                                _Controls(player: player),
+                                const SizedBox(height: 22),
+                                _VolumeControl(player: player),
+                                const SizedBox(height: 22),
+                                _QueuePreview(player: player),
+                              ],
+                            ),
+                          ),
+                        ),
+                      );
+                    },
+                  ),
+                ),
+                SubtitleOverlay(
+                  subtitlePath: track.subtitlePath,
+                  position: player.position,
+                ),
+              ],
+            ),
           ),
         );
       },
     );
   }
+}
 
-  String _format(Duration duration) {
-    final minutes = duration.inMinutes.remainder(60).toString().padLeft(2, '0');
-    final seconds = duration.inSeconds.remainder(60).toString().padLeft(2, '0');
+class _EmptyPlayer extends StatelessWidget {
+  const _EmptyPlayer();
+
+  @override
+  Widget build(BuildContext context) {
+    final scheme = Theme.of(context).colorScheme;
+    return Scaffold(
+      body: Center(
+        child: Padding(
+          padding: const EdgeInsets.all(24),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Icon(Icons.music_note_rounded, size: 84, color: scheme.primary),
+              const SizedBox(height: 20),
+              Text(
+                'No hay pista activa',
+                style: Theme.of(context).textTheme.headlineSmall,
+                textAlign: TextAlign.center,
+              ),
+              const SizedBox(height: 8),
+              const Text(
+                'Elige una cancion de tu biblioteca para empezar.',
+                textAlign: TextAlign.center,
+              ),
+              const SizedBox(height: 24),
+              FilledButton.icon(
+                onPressed: () => Navigator.of(context).maybePop(),
+                icon: const Icon(Icons.library_music),
+                label: const Text('Ir a la biblioteca'),
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+class _AmbientBackground extends StatelessWidget {
+  const _AmbientBackground({required this.scheme, required this.isPlaying});
+
+  final ColorScheme scheme;
+  final bool isPlaying;
+
+  @override
+  Widget build(BuildContext context) {
+    return Positioned.fill(
+      child: AnimatedContainer(
+        duration: const Duration(milliseconds: 800),
+        curve: Curves.easeOutCubic,
+        decoration: BoxDecoration(
+          gradient: LinearGradient(
+            colors: [
+              scheme.primaryContainer,
+              scheme.surface,
+              scheme.secondaryContainer,
+            ],
+            begin: Alignment.topLeft,
+            end: Alignment.bottomRight,
+          ),
+        ),
+        child: Stack(
+          children: [
+            AnimatedPositioned(
+              duration: const Duration(milliseconds: 1200),
+              curve: Curves.easeOutCubic,
+              top: isPlaying ? -96 : -56,
+              left: isPlaying ? -48 : -12,
+              child: _Orb(color: scheme.primary.withOpacity(0.18)),
+            ),
+            AnimatedPositioned(
+              duration: const Duration(milliseconds: 1200),
+              curve: Curves.easeOutCubic,
+              bottom: isPlaying ? -120 : -80,
+              right: isPlaying ? -72 : -32,
+              child: _Orb(color: scheme.tertiary.withOpacity(0.16)),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+class _Orb extends StatelessWidget {
+  const _Orb({required this.color});
+
+  final Color color;
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      width: 280,
+      height: 280,
+      decoration: BoxDecoration(color: color, shape: BoxShape.circle),
+    );
+  }
+}
+
+class _HeroArtwork extends StatelessWidget {
+  const _HeroArtwork({required this.track, required this.isPlaying});
+
+  final Track track;
+  final bool isPlaying;
+
+  @override
+  Widget build(BuildContext context) {
+    final scheme = Theme.of(context).colorScheme;
+    return TweenAnimationBuilder<double>(
+      key: ValueKey<String>(track.id),
+      tween: Tween<double>(begin: 0.92, end: isPlaying ? 1 : 0.97),
+      duration: const Duration(milliseconds: 650),
+      curve: Curves.easeOutBack,
+      builder: (context, scale, _) {
+        return Transform.scale(
+          scale: scale,
+          child: Hero(
+            tag: playerArtHeroTag(track),
+            child: Container(
+              width: 224,
+              height: 224,
+              clipBehavior: Clip.antiAlias,
+              decoration: BoxDecoration(
+                color: scheme.secondaryContainer,
+                borderRadius: BorderRadius.circular(34),
+                boxShadow: [
+                  BoxShadow(
+                    color: scheme.shadow.withOpacity(0.28),
+                    blurRadius: 34,
+                    offset: const Offset(0, 18),
+                  ),
+                ],
+              ),
+              child: track.artworkUrl == null
+                  ? Icon(
+                      Icons.music_note_rounded,
+                      size: 104,
+                      color: scheme.onSecondaryContainer,
+                    )
+                  : Image.network(
+                      track.artworkUrl!,
+                      fit: BoxFit.cover,
+                      errorBuilder: (_, __, ___) => Icon(
+                        Icons.music_note_rounded,
+                        size: 104,
+                        color: scheme.onSecondaryContainer,
+                      ),
+                    ),
+            ),
+          ),
+        );
+      },
+    );
+  }
+}
+
+class _TrackInfo extends StatelessWidget {
+  const _TrackInfo({super.key, required this.track});
+
+  final Track track;
+
+  @override
+  Widget build(BuildContext context) {
+    final scheme = Theme.of(context).colorScheme;
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.center,
+      children: [
+        Text(
+          track.title,
+          textAlign: TextAlign.center,
+          maxLines: 3,
+          overflow: TextOverflow.ellipsis,
+          style: Theme.of(context).textTheme.headlineSmall?.copyWith(
+                color: scheme.onSurface,
+                fontWeight: FontWeight.w700,
+              ),
+        ),
+        const SizedBox(height: 6),
+        Text(
+          track.artist,
+          textAlign: TextAlign.center,
+          maxLines: 2,
+          overflow: TextOverflow.ellipsis,
+          style: TextStyle(color: scheme.onSurfaceVariant, fontSize: 16),
+        ),
+        if (track.album != null && track.album!.isNotEmpty) ...[
+          const SizedBox(height: 4),
+          Text(
+            track.album!,
+            textAlign: TextAlign.center,
+            maxLines: 1,
+            overflow: TextOverflow.ellipsis,
+            style: TextStyle(color: scheme.onSurfaceVariant, fontSize: 12),
+          ),
+        ],
+      ],
+    );
+  }
+}
+
+class _MetaChips extends StatelessWidget {
+  const _MetaChips({required this.track});
+
+  final Track track;
+
+  @override
+  Widget build(BuildContext context) {
+    final chips = <Widget>[
+      if (track.format != null && track.format!.isNotEmpty)
+        _chip(Icons.audio_file, track.format!.toUpperCase()),
+      if (track.source != null && track.source!.isNotEmpty)
+        _chip(Icons.source_rounded, track.source!),
+      if (track.subtitlePath != null)
+        _chip(Icons.closed_caption, 'Subtítulos'),
+    ];
+    if (chips.isEmpty) return const SizedBox.shrink();
+
+    return Wrap(
+      spacing: 8,
+      runSpacing: 4,
+      alignment: WrapAlignment.center,
+      children: chips,
+    );
+  }
+
+  Widget _chip(IconData icon, String label) {
+    return Builder(
+      builder: (context) {
+        final scheme = Theme.of(context).colorScheme;
+        return Chip(
+          avatar: Icon(icon, size: 15),
+          label: Text(label),
+          labelStyle: TextStyle(
+            color: scheme.onSecondaryContainer,
+            fontSize: 11,
+          ),
+          backgroundColor: scheme.secondaryContainer,
+          side: BorderSide.none,
+          visualDensity: VisualDensity.compact,
+          materialTapTargetSize: MaterialTapTargetSize.shrinkWrap,
+        );
+      },
+    );
+  }
+}
+
+class _Progress extends StatelessWidget {
+  const _Progress({
+    required this.currentMs,
+    required this.maxMs,
+    required this.position,
+    required this.duration,
+    required this.onSeek,
+  });
+
+  final int currentMs;
+  final int maxMs;
+  final Duration position;
+  final Duration duration;
+  final ValueChanged<Duration> onSeek;
+
+  @override
+  Widget build(BuildContext context) {
+    final scheme = Theme.of(context).colorScheme;
+    return Column(
+      children: [
+        Slider(
+          value: currentMs.toDouble(),
+          max: maxMs.toDouble(),
+          activeTrackColor: scheme.primary,
+          inactiveTrackColor: scheme.secondaryContainer,
+          thumbColor: scheme.primary,
+          onChanged: (value) => onSeek(Duration(milliseconds: value.toInt())),
+        ),
+        Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 8),
+          child: Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              Text(_format(position), style: TextStyle(color: scheme.onSurfaceVariant)),
+              Text(_format(duration), style: TextStyle(color: scheme.onSurfaceVariant)),
+            ],
+          ),
+        ),
+      ],
+    );
+  }
+
+  String _format(Duration value) {
+    final minutes = value.inMinutes.remainder(60).toString().padLeft(2, '0');
+    final seconds = value.inSeconds.remainder(60).toString().padLeft(2, '0');
     return '$minutes:$seconds';
   }
 }
 
+class _Controls extends StatelessWidget {
+  const _Controls({required this.player});
+
+  final PlayerService player;
+
+  @override
+  Widget build(BuildContext context) {
+    final scheme = Theme.of(context).colorScheme;
+    return Row(
+      mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+      children: [
+        _smallControl(
+          icon: Icons.shuffle_rounded,
+          selected: player.shuffle,
+          onPressed: player.toggleShuffle,
+        ),
+        _smallControl(
+          icon: Icons.skip_previous_rounded,
+          size: 30,
+          onPressed: player.skipPrevious,
+        ),
+        AnimatedScale(
+          scale: player.isPlaying ? 1.06 : 1,
+          duration: const Duration(milliseconds: 260),
+          curve: Curves.easeOutBack,
+          child: IconButton(
+            tooltip: player.isPlaying ? 'Pausar' : 'Reproducir',
+            style: IconButton.styleFrom(
+              backgroundColor: scheme.primary,
+              foregroundColor: scheme.onPrimary,
+              minimumSize: const Size(76, 76),
+              shape: const StadiumBorder(),
+              elevation: 4,
+            ),
+            icon: _PlayPauseIcon(isPlaying: player.isPlaying),
+            onPressed: () =>
+                player.isPlaying ? player.pause() : player.play(),
+          ),
+        ),
+        _smallControl(
+          icon: Icons.skip_next_rounded,
+          size: 30,
+          onPressed: player.skipNext,
+        ),
+        _smallControl(
+          icon: Icons.repeat_rounded,
+          selected: player.loopMode != LoopMode.off,
+          onPressed: player.toggleLoop,
+        ),
+      ],
+    );
+  }
+
+  Widget _smallControl({
+    required IconData icon,
+    required VoidCallback onPressed,
+    bool selected = false,
+    double size = 24,
+  }) {
+    return Builder(
+      builder: (context) {
+        final scheme = Theme.of(context).colorScheme;
+        return IconButton(
+          icon: Icon(icon, size: size),
+          tooltip: icon == Icons.shuffle_rounded
+              ? 'Aleatorio'
+              : icon == Icons.repeat_rounded
+                  ? 'Repetir'
+                  : null,
+          onPressed: onPressed,
+          style: IconButton.styleFrom(
+            minimumSize: const Size(50, 50),
+            backgroundColor: selected
+                ? scheme.secondaryContainer
+                : Colors.transparent,
+            foregroundColor: selected
+                ? scheme.onSecondaryContainer
+                : scheme.onSurfaceVariant,
+            shape: const StadiumBorder(),
+          ),
+        );
+      },
+    );
+  }
+}
+
+class _PlayPauseIcon extends StatelessWidget {
+  const _PlayPauseIcon({required this.isPlaying});
+
+  final bool isPlaying;
+
+  @override
+  Widget build(BuildContext context) {
+    return AnimatedSwitcher(
+      duration: const Duration(milliseconds: 200),
+      switchInCurve: Curves.easeOutBack,
+      child: Icon(
+        isPlaying ? Icons.pause_rounded : Icons.play_arrow_rounded,
+        key: ValueKey<bool>(isPlaying),
+        size: 38,
+      ),
+    );
+  }
+}
+
 class _VolumeControl extends StatefulWidget {
-  const _VolumeControl();
+  const _VolumeControl({required this.player});
+
+  final PlayerService player;
 
   @override
   State<_VolumeControl> createState() => _VolumeControlState();
@@ -165,23 +537,315 @@ class _VolumeControl extends StatefulWidget {
 
 class _VolumeControlState extends State<_VolumeControl> {
   double _volume = 1;
+  double _lastVolume = 1;
+
+  void _change(double value) {
+    setState(() {
+      _volume = value;
+      if (value > 0) _lastVolume = value;
+    });
+    widget.player.setVolume(value);
+  }
 
   @override
   Widget build(BuildContext context) {
-    final player = context.read<PlayerService>();
-    return Row(
-      children: [
-        const Icon(Icons.volume_down),
-        Expanded(
-          child: Slider(
-            value: _volume,
-            onChanged: (value) {
-              setState(() => _volume = value);
-              player.setVolume(value);
-            },
+    final scheme = Theme.of(context).colorScheme;
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 6),
+      decoration: BoxDecoration(
+        color: scheme.surface.withOpacity(0.55),
+        borderRadius: BorderRadius.circular(22),
+        border: Border.all(color: scheme.outlineVariant.withOpacity(0.35)),
+      ),
+      child: Row(
+        children: [
+          IconButton(
+            tooltip: _volume == 0 ? 'Activar sonido' : 'Silenciar',
+            icon: Icon(
+              _volume == 0 ? Icons.volume_off : Icons.volume_down_rounded,
+            ),
+            color: scheme.onSurfaceVariant,
+            onPressed: () => _change(_volume == 0 ? _lastVolume : 0),
           ),
-        ),
-      ],
+          Expanded(
+            child: Slider(
+              value: _volume,
+              activeTrackColor: scheme.primary,
+              inactiveTrackColor: scheme.secondaryContainer,
+              thumbColor: scheme.primary,
+              onChanged: _change,
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class _QueuePreview extends StatelessWidget {
+  const _QueuePreview({required this.player});
+
+  final PlayerService player;
+
+  @override
+  Widget build(BuildContext context) {
+    final scheme = Theme.of(context).colorScheme;
+    final current = player.currentTrack;
+    final index = current == null
+        ? -1
+        : player.queue.indexWhere((item) => item.id == current.id);
+    final next = player.queue.skip(index + 1).take(3).toList();
+
+    return Container(
+      padding: const EdgeInsets.all(16),
+      decoration: BoxDecoration(
+        color: scheme.surface.withOpacity(0.55),
+        borderRadius: BorderRadius.circular(24),
+        border: Border.all(color: scheme.outlineVariant.withOpacity(0.35)),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              Icon(Icons.queue_music_rounded, color: scheme.primary),
+              const SizedBox(width: 10),
+              Expanded(
+                child: Text(
+                  'A continuación',
+                  style: Theme.of(context).textTheme.titleMedium,
+                ),
+              ),
+              TextButton.icon(
+                onPressed: () => _openQueue(context),
+                icon: const Icon(Icons.unfold_more, size: 18),
+                label: Text('${player.queue.length}'),
+              ),
+            ],
+          ),
+          const SizedBox(height: 8),
+          if (next.isEmpty)
+            Text(
+              'No hay más canciones en la cola.',
+              style: TextStyle(color: scheme.onSurfaceVariant, fontSize: 12),
+            )
+          else
+            ...next.map(
+              (item) => ListTile(
+                dense: true,
+                contentPadding: EdgeInsets.zero,
+                leading: const Icon(Icons.music_note, size: 18),
+                title: Text(
+                  item.title,
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                ),
+                subtitle: Text(
+                  item.artist,
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                ),
+                onTap: () {
+                  final target = player.queue.indexWhere(
+                    (candidate) => candidate.id == item.id,
+                  );
+                  if (target >= 0) player.playIndex(target);
+                },
+              ),
+            ),
+        ],
+      ),
+    );
+  }
+
+  Future<void> _openQueue(BuildContext context) {
+    return showModalBottomSheet<void>(
+      context: context,
+      isScrollControlled: true,
+      useSafeArea: true,
+      backgroundColor: Colors.transparent,
+      builder: (_) => _QueueSheet(player: player),
+    );
+  }
+}
+
+class _QueueSheet extends StatelessWidget {
+  const _QueueSheet({required this.player});
+
+  final PlayerService player;
+
+  @override
+  Widget build(BuildContext context) {
+    final scheme = Theme.of(context).colorScheme;
+    return DraggableScrollableSheet(
+      expand: false,
+      initialChildSize: 0.68,
+      minChildSize: 0.32,
+      maxChildSize: 0.92,
+      builder: (context, scrollController) {
+        return Container(
+          decoration: BoxDecoration(
+            color: scheme.surface,
+            borderRadius: const BorderRadius.vertical(
+              top: Radius.circular(30),
+            ),
+          ),
+          child: Column(
+            children: [
+              const SizedBox(height: 12),
+              Container(
+                width: 42,
+                height: 4,
+                decoration: BoxDecoration(
+                  color: scheme.outlineVariant,
+                  borderRadius: BorderRadius.circular(4),
+                ),
+              ),
+              Padding(
+                padding: const EdgeInsets.fromLTRB(20, 16, 12, 8),
+                child: Row(
+                  children: [
+                    Expanded(
+                      child: Text(
+                        'Cola de reproducción',
+                        style: Theme.of(context).textTheme.titleLarge,
+                      ),
+                    ),
+                    IconButton(
+                      icon: const Icon(Icons.close_rounded),
+                      onPressed: () => Navigator.of(context).pop(),
+                    ),
+                  ],
+                ),
+              ),
+              Expanded(
+                child: ListView.separated(
+                  controller: scrollController,
+                  padding: const EdgeInsets.fromLTRB(12, 4, 12, 24),
+                  itemCount: player.queue.length,
+                  separatorBuilder: (_, __) => const SizedBox(height: 6),
+                  itemBuilder: (context, index) {
+                    final item = player.queue[index];
+                    final isCurrent = item.id == player.currentTrack?.id;
+                    return Card(
+                      color: isCurrent
+                          ? scheme.secondaryContainer
+                          : scheme.surfaceContainerHighest,
+                      surfaceTintColor: Colors.transparent,
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(18),
+                      ),
+                      child: ListTile(
+                        leading: CircleAvatar(
+                          backgroundColor: isCurrent
+                              ? scheme.primary
+                              : scheme.secondaryContainer,
+                          child: Icon(
+                            isCurrent
+                                ? Icons.equalizer_rounded
+                                : Icons.music_note,
+                            size: 18,
+                            color: isCurrent
+                                ? scheme.onPrimary
+                                : scheme.onSecondaryContainer,
+                          ),
+                        ),
+                        title: Text(
+                          item.title,
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
+                        ),
+                        subtitle: Text(
+                          item.artist,
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
+                        ),
+                        selected: isCurrent,
+                        onTap: () {
+                          player.playIndex(index);
+                          Navigator.of(context).pop();
+                        },
+                      ),
+                    );
+                  },
+                ),
+              ),
+            ],
+          ),
+        );
+      },
+    );
+  }
+}
+
+class _PlayingBars extends StatefulWidget {
+  const _PlayingBars({required this.isPlaying});
+
+  final bool isPlaying;
+
+  @override
+  State<_PlayingBars> createState() => _PlayingBarsState();
+}
+
+class _PlayingBarsState extends State<_PlayingBars>
+    with SingleTickerProviderStateMixin {
+  late final AnimationController _controller = AnimationController(
+    vsync: this,
+    duration: const Duration(milliseconds: 900),
+  )..repeat(reverse: true);
+
+  @override
+  void dispose() {
+    _controller.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final scheme = Theme.of(context).colorScheme;
+    return AnimatedOpacity(
+      opacity: widget.isPlaying ? 1 : 0.35,
+      duration: const Duration(milliseconds: 250),
+      child: AnimatedBuilder(
+        animation: _controller,
+        builder: (context, _) {
+          return SizedBox(
+            width: 22,
+            height: 20,
+            child: Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              crossAxisAlignment: CrossAxisAlignment.end,
+              children: [
+                _bar(scheme, 0.0, 0.55, 5, 18),
+                _bar(scheme, 0.2, 0.8, 8, 20),
+                _bar(scheme, 0.4, 1.0, 4, 15),
+              ],
+            ),
+          );
+        },
+      ),
+    );
+  }
+
+  Widget _bar(ColorScheme scheme, double begin, double end, double min, double max) {
+    final height = Tween<double>(begin: min, end: max).animate(
+      CurvedAnimation(
+        parent: _controller,
+        curve: Interval(begin, end, curve: Curves.easeInOut),
+      ),
+    );
+    return AnimatedBuilder(
+      animation: height,
+      builder: (context, _) {
+        return Container(
+          width: 4,
+          height: height.value,
+          decoration: BoxDecoration(
+            color: scheme.primary,
+            borderRadius: BorderRadius.circular(4),
+          ),
+        );
+      },
     );
   }
 }
