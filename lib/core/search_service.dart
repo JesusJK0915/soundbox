@@ -75,6 +75,8 @@ class SearchService {
           return await _searchPixabay(query, limit);
         case ProviderKind.directUrl:
           return const <Track>[];
+        case ProviderKind.youtube:
+          return const <Track>[];
       }
     } catch (_) {
       return const <Track>[];

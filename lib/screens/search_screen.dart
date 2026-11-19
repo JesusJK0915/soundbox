@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:provider/provider.dart';
 
 import '../core/connectivity_service.dart';
@@ -7,6 +8,7 @@ import '../core/download_settings.dart';
 import '../core/models.dart';
 import '../core/providers.dart';
 import '../core/search_service.dart';
+import '../core/youtube_service.dart';
 
 class SearchScreen extends StatefulWidget {
   const SearchScreen({super.key});
@@ -22,6 +24,8 @@ class _SearchScreenState extends State<SearchScreen> {
   bool _loading = false;
   String? _error;
   List<Track> _results = const <Track>[];
+  YouTubeVideo? _youtube;
+  String? _youtubeUrl;
 
   @override
   void dispose() {
@@ -38,12 +42,44 @@ class _SearchScreenState extends State<SearchScreen> {
     setState(() {
       _loading = true;
       _error = null;
+      _youtube = null;
+      _youtubeUrl = null;
+      _results = const <Track>[];
     });
 
     try {
-      final search = _search ??=
-          SearchService(context.read<ProviderSettingsService>());
-      final results = await search.search(query);
+      final settings = context.read<ProviderSettingsService>();
+      final search = _search ??= SearchService(settings);
+
+      var term = query;
+      if (YouTubeService.isYouTubeUrl(query)) {
+        final key = settings.key(ProviderKind.youtube).trim();
+        if (key.isEmpty || !settings.isEnabled(ProviderKind.youtube)) {
+          setState(() {
+            _error = 'Activa "YouTube (solo búsqueda)" y pega una API key en '
+                'Ajustes para usar links de YouTube.';
+            _loading = false;
+          });
+          return;
+        }
+
+        final video = await YouTubeService(key).resolve(query);
+        if (!mounted) return;
+        term = video.searchQuery;
+        if (term.isEmpty) {
+          setState(() {
+            _error = 'El video no tiene un titulo utilizable para buscar';
+            _loading = false;
+          });
+          return;
+        }
+        setState(() {
+          _youtube = video;
+          _youtubeUrl = query;
+        });
+      }
+
+      final results = await search.search(term);
       if (!mounted) return;
       setState(() {
         _results = results;
@@ -52,10 +88,104 @@ class _SearchScreenState extends State<SearchScreen> {
     } catch (error) {
       if (!mounted) return;
       setState(() {
-        _error = error.toString();
+        _error = error.toString().replaceFirst('StateError: ', '');
         _loading = false;
       });
     }
+  }
+
+  Future<void> _copyYouTubeUrl() async {
+    final url = _youtubeUrl;
+    if (url == null) return;
+    await Clipboard.setData(ClipboardData(text: url));
+    if (!mounted) return;
+    ScaffoldMessenger.of(context).showSnackBar(
+      const SnackBar(content: Text('Link de YouTube copiado')),
+    );
+  }
+
+  Widget _buildYouTubeCard(YouTubeVideo video, ColorScheme colors) {
+    return Container(
+      margin: const EdgeInsets.fromLTRB(12, 8, 12, 0),
+      padding: const EdgeInsets.all(10),
+      decoration: BoxDecoration(
+        color: colors.secondaryContainer,
+        borderRadius: BorderRadius.circular(12),
+      ),
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          ClipRRect(
+            borderRadius: BorderRadius.circular(8),
+            child: video.thumbnailUrl == null
+                ? const SizedBox(
+                    width: 56,
+                    height: 44,
+                    child: Icon(Icons.music_note),
+                  )
+                : Image.network(
+                    video.thumbnailUrl!,
+                    width: 56,
+                    height: 44,
+                    fit: BoxFit.cover,
+                    errorBuilder: (_, __, ___) => const SizedBox(
+                      width: 56,
+                      height: 44,
+                      child: Icon(Icons.music_note),
+                    ),
+                  ),
+          ),
+          const SizedBox(width: 10),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  'Link de YouTube · solo metadata',
+                  style: TextStyle(
+                    color: colors.onSecondaryContainer,
+                    fontSize: 11,
+                    fontWeight: FontWeight.bold,
+                  ),
+                ),
+                const SizedBox(height: 2),
+                Text(
+                  video.title,
+                  maxLines: 2,
+                  overflow: TextOverflow.ellipsis,
+                  style: TextStyle(color: colors.onSecondaryContainer),
+                ),
+                const SizedBox(height: 2),
+                Text(
+                  '${video.channel} · buscando: ${video.searchQuery}',
+                  maxLines: 2,
+                  overflow: TextOverflow.ellipsis,
+                  style: TextStyle(
+                    color: colors.onSecondaryContainer,
+                    fontSize: 11,
+                  ),
+                ),
+                const SizedBox(height: 2),
+                Text(
+                  'Elige una fuente legal de abajo; nunca se extrae audio '
+                  'del video.',
+                  style: TextStyle(
+                    color: colors.onSecondaryContainer,
+                    fontSize: 10,
+                  ),
+                ),
+              ],
+            ),
+          ),
+          IconButton(
+            icon: const Icon(Icons.copy),
+            tooltip: 'Copiar link de YouTube',
+            color: colors.onSecondaryContainer,
+            onPressed: _copyYouTubeUrl,
+          ),
+        ],
+      ),
+    );
   }
 
   @override
@@ -63,6 +193,7 @@ class _SearchScreenState extends State<SearchScreen> {
     return Consumer<ConnectivityService>(
       builder: (context, connectivity, _) {
         final online = connectivity.isOnline;
+        final colors = Theme.of(context).colorScheme;
         return Column(
           children: [
             Padding(
@@ -72,7 +203,7 @@ class _SearchScreenState extends State<SearchScreen> {
                 enabled: online,
                 decoration: InputDecoration(
                   hintText: online
-                      ? 'Buscar en las fuentes activas o pegar una URL'
+                      ? 'Buscar, pegar URL o link de YouTube'
                       : 'Sin conexion',
                   prefixIcon: const Icon(Icons.search),
                   border: const OutlineInputBorder(),
@@ -97,6 +228,7 @@ class _SearchScreenState extends State<SearchScreen> {
                 ),
               ),
             ),
+            if (_youtube != null) _buildYouTubeCard(_youtube!, colors),
             if (_error != null)
               Padding(
                 padding: const EdgeInsets.symmetric(horizontal: 12),

@@ -10,6 +10,7 @@ enum ProviderKind {
   soundCloud,
   pixabay,
   directUrl,
+  youtube,
 }
 
 class ProviderDefinition {
@@ -86,6 +87,15 @@ const List<ProviderDefinition> providerDefinitions = [
     icon: Icons.link,
     defaultEnabled: true,
   ),
+  ProviderDefinition(
+    kind: ProviderKind.youtube,
+    label: 'YouTube (solo búsqueda)',
+    description: 'Lee título y canal de links; nunca descarga audio',
+    icon: Icons.search,
+    requiresKey: true,
+    keyLabel: 'API key',
+    keyHint: 'console.cloud.google.com',
+  ),
 ];
 
 ProviderDefinition definitionFor(ProviderKind kind) =>
@@ -99,6 +109,8 @@ String _defaultKey(ProviderKind kind) {
       return soundCloudClientId;
     case ProviderKind.pixabay:
       return pixabayApiKey;
+    case ProviderKind.youtube:
+      return youtubeApiKey;
     default:
       return '';
   }
@@ -133,6 +145,7 @@ class ProviderSettingsService extends ChangeNotifier {
   List<ProviderKind> get activeSearchProviders => providerDefinitions
       .where((definition) =>
           definition.kind != ProviderKind.directUrl &&
+          definition.kind != ProviderKind.youtube &&
           isEnabled(definition.kind) &&
           (!definition.requiresKey || key(definition.kind).isNotEmpty))
       .map((definition) => definition.kind)

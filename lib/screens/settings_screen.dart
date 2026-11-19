@@ -129,7 +129,7 @@ class SettingsScreen extends StatelessWidget {
         ),
         const SizedBox(height: 8),
         Text(
-          'Fuentes de descarga',
+          'Fuentes y servicios',
           style: Theme.of(context).textTheme.titleMedium,
         ),
         const SizedBox(height: 4),

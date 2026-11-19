@@ -12,6 +12,7 @@ Tu PC solo sirve para escribir codigo y hacer `push`.
 - Conversion local a **MP3, M4A/AAC, OGG, FLAC o WAV** con bitrate de 64 a 320 kbps.
 - Subtitulos `.srt` / `.vtt` que se adjuntan a una pista.
 - Pega una **URL directa** a un archivo propio para descargarlo.
+- Pega un **link de YouTube** y busca la cancion en fuentes legales (solo metadata).
 - **Guardar en otro lugar**: exporta una canción o toda la biblioteca a la carpeta que elijas (Descargas, Drive, etc.).
 
 ## Formato y calidad de descarga
@@ -54,17 +55,25 @@ Se activan y configuran en **Ajustes → Fuentes de descarga** (se guardan en el
 | SoundCloud | `client_id` | Solo pistas marcadas como descargables por su autor |
 | Pixabay | API key | Musica libre de regalias |
 | URL directa | no | Cualquier archivo de audio legal al que tengas enlace |
+| YouTube (solo busqueda) | API key | Lee titulo/canal de un link y busca esa cancion en fuentes legales; no descarga audio |
 
 La app solo maneja audio: no importa ni descarga video.
 
 Las claves tambien se pueden dejar en `lib/core/config.dart` como valores por defecto.
 
-### ¿Por que no YouTube?
+### Links de YouTube
 
-YouTube no expone una API de descarga y sus terminos prohiben extraer contenido.
-Por eso SoundBox no incluye esa fuente: solo trabaja con licencias verificables,
-descargas autorizadas y archivos del usuario. Para contenido tipo YouTube puedes
-usar **Wikimedia Commons**, **Pixabay** o **Internet Archive**.
+YouTube no expone una API de descarga y sus terminos prohiben extraer audio.
+SoundBox no descarga ni extrae nada de un video: si pegas un link de
+`youtube.com` o `youtu.be` en **Buscar**, la app consulta solo la metadata
+publica del video (`videos.list?part=snippet`), limpia el titulo y busca esa
+cancion en las fuentes legales activas. Los resultados aparecen abajo para que
+elijas cual descargar.
+
+Para usarlo, activa **YouTube (solo busqueda)** en Ajustes y pega una API key de
+YouTube Data API v3 (tambien se puede dejar en `lib/core/config.dart`). Sin
+clave, los links de YouTube muestran un aviso. El video nunca se guarda: solo se
+leen titulo, canal y portada.
 
 ## Como obtener el APK
 
