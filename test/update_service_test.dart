@@ -9,9 +9,9 @@ Map<String, dynamic> releaseJson(String tag, List<String> assets) => {
       'published_at': '2026-11-19T19:00:00Z',
       'assets': [
         for (final name in assets)
-          {
+          <String, dynamic>{
             'name': name,
-            'size': 68_743_458,
+            'size': 68743458,
             'browser_download_url':
                 'https://github.com/JesusJK0915/soundbox/releases/download/$tag/$name',
           },
