@@ -13,7 +13,7 @@ class ThemeSettingsService extends ChangeNotifier {
   }
 
   final SharedPreferences? _prefs;
-  bool _wallpaperColors;
+  late bool _wallpaperColors;
 
   static Future<ThemeSettingsService> load() async =>
       ThemeSettingsService(await SharedPreferences.getInstance());
