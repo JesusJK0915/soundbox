@@ -29,7 +29,7 @@ class YouTubeDirectService {
         throw StateError('El video no tiene stream de audio disponible');
       }
 
-      final streamInfo = manifest.audioOnly.withHigestBitrate();
+      final streamInfo = manifest.audioOnly.withHighestBitrate();
       final extension = extensionFor(streamInfo.container.name);
       final path = p.join(
         _library.downloadDir.path,

@@ -8,8 +8,9 @@ const String pixabayApiKey = '';
 const String soundCloudClientId = '';
 const String youtubeApiKey = '';
 
-/// YouTube solo se usa para leer metadata publica (snippet) y buscar la misma
-/// cancion en fuentes legales. Nunca se descarga ni se extrae audio del video.
+/// YouTube tiene dos modos: extraccion directa de audio (experimental) o,
+/// si se desactiva, solo metadata publica (snippet) para buscar en fuentes
+/// legales. Usa el modo directo solo con audio propio o autorizado.
 const String downloadPolicy =
     'Solo fuentes legales: archivos propios, licencias Creative Commons, '
     'dominio publico y contenido con descarga autorizada.';
