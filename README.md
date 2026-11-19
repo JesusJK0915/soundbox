@@ -45,6 +45,29 @@ Tu PC solo sirve para escribir codigo y hacer `push`.
 - **Apariencia**: tema del sistema, claro u oscuro, respuesta háptica y gestos
   configurables en **Ajustes → Interfaz y gestos**.
 
+## Actualizaciones automáticas
+
+SoundBox se actualiza directamente desde los **releases de GitHub** (no hay
+Play Store):
+
+- Al abrir la app comprueba si hay una versión nueva (máximo una vez cada
+  6 horas) y muestra un diálogo con las notas del release.
+- El canal se detecta según la compilación: **alpha** busca
+  `v0.1.0-alpha.*` y **beta** busca `v0.2.0-beta.*`.
+- El APK se elige según la arquitectura del teléfono (`arm64-v8a`,
+  `armeabi-v7a` o `x86_64`). Las compilaciones alpha usan `app-debug.apk`.
+- Puedes descargar e instalar desde el propio diálogo, abrir la página del
+  release en GitHub u omitir esa versión.
+- Si Android pide permiso, la app abre **Instalar aplicaciones desconocidas**
+  para que lo actives y luego reanudas la instalación.
+- El interruptor **Buscar automáticamente** y el botón **Buscar actualizaciones
+  ahora** están en **Ajustes → Actualizaciones**. Funciona en modo offline sin
+  errores: simplemente no hay comprobación hasta que vuelva la conexión.
+
+Los workflows inyectan `--dart-define=UPDATE_CHANNEL=...` y
+`--dart-define=UPDATE_BUILD=${{ github.run_number }}` para que el número de
+build comparado sea exactamente el mismo de la etiqueta publicada.
+
 ## Metadatos y carátulas
 
 Al importar o escanear música (y también al terminar una descarga), SoundBox
