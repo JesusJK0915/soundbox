@@ -58,7 +58,11 @@ class _FloatingDockState extends State<FloatingDock> {
               if (mounted) setState(() => _drag = Offset.zero);
             }
 
-            return Stack(
+            return AnimatedTheme(
+              duration: const Duration(milliseconds: 600),
+              curve: Curves.easeOutCubic,
+              data: Theme.of(context).copyWith(colorScheme: scheme),
+              child: Stack(
               children: [
                 AnimatedPositioned(
                   duration: _drag == Offset.zero
@@ -189,6 +193,7 @@ class _FloatingDockState extends State<FloatingDock> {
                   ),
                 ),
               ],
+              ),
             );
           },
         );

@@ -68,6 +68,15 @@ Los workflows inyectan `--dart-define=UPDATE_CHANNEL=...` y
 `--dart-define=UPDATE_BUILD=${{ github.run_number }}` para que el número de
 build comparado sea exactamente el mismo de la etiqueta publicada.
 
+## Colores de la carátula
+
+El reproductor puede generar su paleta Material You a partir de la **imagen de
+la canción**: extrae el color vibrante/dominante de la carátula local o remota
+y lo usa como semilla, de modo que el fondo, los botones y los acentos cambian
+al cambiar de pista. Se activa en **Ajustes → Apariencia → Colores de la
+carátula**. Si la pista no tiene imagen (o falla la lectura) se mantiene el
+Material You del fondo de pantalla o el color de respaldo de la canción.
+
 ## Metadatos y carátulas
 
 Al importar o escanear música (y también al terminar una descarga), SoundBox
