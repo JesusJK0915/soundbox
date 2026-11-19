@@ -15,46 +15,70 @@ class WelcomeScreen extends StatelessWidget {
 
     return Scaffold(
       body: SafeArea(
-        child: Padding(
-          padding: const EdgeInsets.all(24),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              const Spacer(),
-              Icon(Icons.music_note, size: 72, color: colors.primary),
-              const SizedBox(height: 16),
-              Text('Bienvenido a $appName', style: text.headlineMedium),
-              const SizedBox(height: 16),
-              const Text(
-                'Usa la musica de forma responsable: solo archivos tuyos, con '
-                'licencia o con permiso del autor. La descarga directa de '
-                'YouTube es experimental y puede dejar de funcionar si '
-                'YouTube cambia su funcionamiento.',
-              ),
-              const SizedBox(height: 16),
-              Container(
-                width: double.infinity,
-                padding: const EdgeInsets.all(14),
-                decoration: BoxDecoration(
-                  color: colors.errorContainer,
-                  borderRadius: BorderRadius.circular(12),
+        child: LayoutBuilder(
+          builder: (context, constraints) {
+            return SingleChildScrollView(
+              child: ConstrainedBox(
+                constraints: BoxConstraints(minHeight: constraints.maxHeight),
+                child: Padding(
+                  padding: const EdgeInsets.all(24),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Icon(
+                            Icons.music_note,
+                            size: 72,
+                            color: colors.primary,
+                          ),
+                          const SizedBox(height: 16),
+                          Text(
+                            'Bienvenido a $appName',
+                            style: text.headlineMedium,
+                          ),
+                          const SizedBox(height: 16),
+                          const Text(
+                            'Usa la musica de forma responsable: solo archivos '
+                            'tuyos, con licencia o con permiso del autor. La '
+                            'descarga directa de YouTube es experimental y '
+                            'puede dejar de funcionar si YouTube cambia su '
+                            'funcionamiento.',
+                          ),
+                          const SizedBox(height: 16),
+                          Container(
+                            width: double.infinity,
+                            padding: const EdgeInsets.all(14),
+                            decoration: BoxDecoration(
+                              color: colors.errorContainer,
+                              borderRadius: BorderRadius.circular(12),
+                            ),
+                            child: Text(
+                              'Si no usas la musica adecuadamente te pueden '
+                              'mandar una bomba a tu casa 💣',
+                              style: TextStyle(color: colors.onErrorContainer),
+                            ),
+                          ),
+                        ],
+                      ),
+                      Padding(
+                        padding: const EdgeInsets.only(top: 24),
+                        child: SizedBox(
+                          width: double.infinity,
+                          child: FilledButton(
+                            onPressed: onAccepted,
+                            child: const Text('Entendido'),
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
                 ),
-                child: Text(
-                  'Si no usas la musica adecuadamente te pueden mandar una '
-                  'bomba a tu casa 💣',
-                  style: TextStyle(color: colors.onErrorContainer),
-                ),
               ),
-              const Spacer(),
-              SizedBox(
-                width: double.infinity,
-                child: FilledButton(
-                  onPressed: onAccepted,
-                  child: const Text('Entendido'),
-                ),
-              ),
-            ],
-          ),
+            );
+          },
         ),
       ),
     );
