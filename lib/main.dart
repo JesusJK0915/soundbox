@@ -10,6 +10,7 @@ import 'core/config.dart';
 import 'core/connectivity_service.dart';
 import 'core/download_service.dart';
 import 'core/library_service.dart';
+import 'core/providers.dart';
 import 'player/player_service.dart';
 import 'screens/home_screen.dart';
 
@@ -27,6 +28,7 @@ Future<void> main() async {
   final connectivity = ConnectivityService();
   await connectivity.initialize();
 
+  final sources = await ProviderSettingsService.load();
   final downloads = DownloadService(library);
   final player = PlayerService(connectivity);
 
@@ -39,6 +41,7 @@ Future<void> main() async {
       library: library,
       downloads: downloads,
       player: player,
+      sources: sources,
     ),
   );
 }
@@ -48,6 +51,7 @@ class SoundBoxApp extends StatelessWidget {
   final LibraryService library;
   final DownloadService downloads;
   final PlayerService player;
+  final ProviderSettingsService sources;
 
   const SoundBoxApp({
     super.key,
@@ -55,6 +59,7 @@ class SoundBoxApp extends StatelessWidget {
     required this.library,
     required this.downloads,
     required this.player,
+    required this.sources,
   });
 
   @override
@@ -65,6 +70,7 @@ class SoundBoxApp extends StatelessWidget {
         ChangeNotifierProvider<LibraryService>.value(value: library),
         ChangeNotifierProvider<DownloadService>.value(value: downloads),
         ChangeNotifierProvider<PlayerService>.value(value: player),
+        ChangeNotifierProvider<ProviderSettingsService>.value(value: sources),
       ],
       child: MaterialApp(
         title: appName,

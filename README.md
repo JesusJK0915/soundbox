@@ -7,15 +7,32 @@ Tu PC solo sirve para escribir codigo y hacer `push`.
 
 - Importa musica y video locales y los reproduce sin conexion.
 - Detecta automaticamente si hay internet; si no hay, oculta la busqueda y usa solo la biblioteca local.
-- Busca musica Creative Commons en **Internet Archive** y la descarga al dispositivo.
+- Busca en varias fuentes legales y descarga al dispositivo.
 - Descargas con progreso, pausa y reanude (`Range`).
 - Subtitulos `.srt` / `.vtt` que se adjuntan a una pista o video.
-- Opcional: soporte para **Jamendo** poniendo tu `client_id` en `lib/core/config.dart`.
+- Pega una **URL directa** a un archivo propio para descargarlo.
 
-## Fuentes legales
+## Fuentes de descarga
 
-SoundBox **no** descarga contenido con DRM ni de servicios de streaming privados.
-Solo trabaja con archivos del usuario y fuentes abiertas/autorizadas.
+Se activan y configuran en **Ajustes → Fuentes de descarga** (se guardan en el dispositivo):
+
+| Fuente | Clave | Que aporta |
+| --- | --- | --- |
+| Internet Archive | no | Creative Commons y dominio publico (activa por defecto) |
+| Wikimedia Commons | no | Audio/video con licencia libre (activa por defecto) |
+| Jamendo | `client_id` | Musica Creative Commons |
+| SoundCloud | `client_id` | Solo pistas marcadas como descargables por su autor |
+| Pixabay | API key | Musica y video libres de regalias |
+| URL directa | no | Cualquier archivo legal al que tengas enlace |
+
+Las claves tambien se pueden dejar en `lib/core/config.dart` como valores por defecto.
+
+### ¿Por que no YouTube?
+
+YouTube no expone una API de descarga y sus terminos prohiben extraer audio/video.
+Por eso SoundBox no incluye esa fuente: solo trabaja con licencias verificables,
+descargas autorizadas y archivos del usuario. Para contenido tipo YouTube puedes
+usar **Wikimedia Commons**, **Pixabay** o **Internet Archive**.
 
 ## Como obtener el APK
 

@@ -4,6 +4,7 @@ import 'package:provider/provider.dart';
 import '../core/connectivity_service.dart';
 import '../core/download_service.dart';
 import '../core/models.dart';
+import '../core/providers.dart';
 import '../core/search_service.dart';
 
 class SearchScreen extends StatefulWidget {
@@ -14,7 +15,7 @@ class SearchScreen extends StatefulWidget {
 }
 
 class _SearchScreenState extends State<SearchScreen> {
-  final SearchService _search = SearchService();
+  SearchService? _search;
   final TextEditingController _controller = TextEditingController();
 
   bool _loading = false;
@@ -39,7 +40,9 @@ class _SearchScreenState extends State<SearchScreen> {
     });
 
     try {
-      final results = await _search.search(query);
+      final search = _search ??=
+          SearchService(context.read<ProviderSettingsService>());
+      final results = await search.search(query);
       if (!mounted) return;
       setState(() {
         _results = results;
@@ -68,7 +71,7 @@ class _SearchScreenState extends State<SearchScreen> {
                 enabled: online,
                 decoration: InputDecoration(
                   hintText: online
-                      ? 'Buscar en Internet Archive (Creative Commons)'
+                      ? 'Buscar en las fuentes activas o pegar una URL'
                       : 'Sin conexion',
                   prefixIcon: const Icon(Icons.search),
                   border: const OutlineInputBorder(),
@@ -112,7 +115,11 @@ class _SearchScreenState extends State<SearchScreen> {
                             overflow: TextOverflow.ellipsis,
                           ),
                           subtitle: Text(
-                            '${track.artist}${track.license != null ? ' · CC' : ''}',
+                            [
+                              track.artist,
+                              if (track.source != null) track.source!,
+                              if (track.license != null) 'con licencia',
+                            ].join(' · '),
                             maxLines: 1,
                             overflow: TextOverflow.ellipsis,
                           ),

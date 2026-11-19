@@ -16,6 +16,9 @@ class Track {
   final String? subtitlePath;
   final bool downloaded;
 
+  /// Nombre del proveedor de origen (Internet Archive, Wikimedia, etc.).
+  final String? source;
+
   const Track({
     required this.id,
     required this.title,
@@ -29,6 +32,7 @@ class Track {
     this.license,
     this.subtitlePath,
     this.downloaded = false,
+    this.source,
   });
 
   bool get isVideo {
@@ -55,6 +59,7 @@ class Track {
         'license': license,
         'subtitlePath': subtitlePath,
         'downloaded': downloaded,
+        'source': source,
       };
 
   factory Track.fromJson(Map<String, dynamic> json) => Track(
@@ -70,6 +75,7 @@ class Track {
         license: json['license'] as String?,
         subtitlePath: json['subtitlePath'] as String?,
         downloaded: json['downloaded'] as bool? ?? false,
+        source: json['source'] as String?,
       );
 }
 
