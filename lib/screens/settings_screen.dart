@@ -3,6 +3,8 @@ import 'package:provider/provider.dart';
 
 import '../core/config.dart';
 import '../core/connectivity_service.dart';
+import '../core/export_service.dart';
+import '../core/library_service.dart';
 import '../core/providers.dart';
 
 class SettingsScreen extends StatelessWidget {
@@ -51,6 +53,49 @@ class SettingsScreen extends StatelessWidget {
       );
     } finally {
       controller.dispose();
+    }
+  }
+
+  Future<void> _chooseFolder(BuildContext context) async {
+    try {
+      final uri = await context.read<ExportService>().chooseFolder();
+      if (!context.mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(uri == null ? 'Eleccion cancelada' : 'Carpeta guardada'),
+        ),
+      );
+    } catch (error) {
+      if (!context.mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('No se pudo elegir: $error')),
+      );
+    }
+  }
+
+  Future<void> _exportAll(BuildContext context) async {
+    final export = context.read<ExportService>();
+    final tracks = context.read<LibraryService>().playableTracks;
+    if (tracks.isEmpty) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('La biblioteca esta vacia')),
+      );
+      return;
+    }
+
+    final folder = export.folderUri ?? await export.chooseFolder();
+    if (folder == null || !context.mounted) return;
+    try {
+      final count = await export.exportToFolder(folder, tracks);
+      if (!context.mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('$count cancion(es) copiadas')),
+      );
+    } catch (error) {
+      if (!context.mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('No se pudo exportar: $error')),
+      );
     }
   }
 
@@ -139,6 +184,34 @@ class SettingsScreen extends StatelessWidget {
               );
             },
           ),
+        ),
+        const Divider(),
+        Text(
+          'Guardar en otro lugar',
+          style: Theme.of(context).textTheme.titleMedium,
+        ),
+        Consumer<ExportService>(
+          builder: (context, export, _) => ListTile(
+            leading: const Icon(Icons.folder_open),
+            title: const Text('Carpeta de exportacion'),
+            subtitle: Text(
+              export.hasFolder
+                  ? 'Carpeta elegida: ${export.folderUri}'
+                  : 'Elige una carpeta (Descargas, Drive, etc.)',
+              maxLines: 2,
+              overflow: TextOverflow.ellipsis,
+            ),
+            trailing: TextButton(
+              onPressed: () => _chooseFolder(context),
+              child: const Text('Elegir'),
+            ),
+          ),
+        ),
+        ListTile(
+          leading: const Icon(Icons.file_upload),
+          title: const Text('Exportar toda la biblioteca'),
+          subtitle: const Text('Copia las canciones a la carpeta elegida'),
+          onTap: () => _exportAll(context),
         ),
         const Divider(),
         const ListTile(

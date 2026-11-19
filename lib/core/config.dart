@@ -1,5 +1,5 @@
 const String appName = 'SoundBox';
-const String appVersion = '0.2.0';
+const String appVersion = '0.3.0';
 
 /// Claves opcionales. Se pueden cambiar desde Ajustes sin recompilar.
 /// Si estan vacias, el proveedor correspondiente aparece desactivado.

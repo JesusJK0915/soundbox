@@ -11,6 +11,21 @@ Tu PC solo sirve para escribir codigo y hacer `push`.
 - Descargas con progreso, pausa y reanude (`Range`).
 - Subtitulos `.srt` / `.vtt` que se adjuntan a una pista.
 - Pega una **URL directa** a un archivo propio para descargarlo.
+- **Guardar en otro lugar**: exporta una canción o toda la biblioteca a la carpeta que elijas (Descargas, Drive, etc.).
+
+## Guardar la musica en otra carpeta
+
+La biblioteca y las descargas viven en el almacenamiento privado de la app. Para
+sacar copias a otro sitio:
+
+- En **Biblioteca**, abre el menú de una canción → **Guardar en otro lugar**.
+- En **Descargas**, toca el icono 💾 de una descarga terminada.
+- En **Ajustes → Guardar en otro lugar**, elige una carpeta y pulsa
+  **Exportar toda la biblioteca**.
+
+Se usa el selector del sistema (Storage Access Framework), así que la carpeta
+elegida se recuerda y no hace falta permiso de almacenamiento. La copia se crea
+en el destino; el original sigue en la app.
 
 ## Fuentes de descarga
 

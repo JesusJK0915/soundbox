@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
 import '../core/download_service.dart';
+import '../core/export_service.dart';
 import '../core/library_service.dart';
 import '../core/models.dart';
 import '../player/player_service.dart';
@@ -54,6 +55,12 @@ class DownloadsScreen extends StatelessWidget {
                       icon: const Icon(Icons.play_arrow),
                       onPressed: () => downloads.start(task.track),
                     ),
+                  if (task.status == DownloadStatus.done)
+                    IconButton(
+                      icon: const Icon(Icons.save_alt),
+                      tooltip: 'Guardar en otro lugar',
+                      onPressed: () => _saveTrack(context, task),
+                    ),
                   IconButton(
                     icon: const Icon(Icons.delete_outline),
                     onPressed: () => downloads.cancel(task),
@@ -77,6 +84,33 @@ class DownloadsScreen extends StatelessWidget {
         );
       },
     );
+  }
+
+  Future<void> _saveTrack(BuildContext context, DownloadTask task) async {
+    final library = context.read<LibraryService>();
+    Track? local;
+    for (final item in library.tracks) {
+      if (item.sourceUrl == task.savePath) {
+        local = item;
+        break;
+      }
+    }
+    if (local == null) return;
+
+    try {
+      final saved = await context.read<ExportService>().saveFile(local);
+      if (!context.mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(saved == null ? 'Guardado cancelado' : 'Cancion guardada'),
+        ),
+      );
+    } catch (error) {
+      if (!context.mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('No se pudo guardar: $error')),
+      );
+    }
   }
 
   String _statusLabel(DownloadStatus status) {

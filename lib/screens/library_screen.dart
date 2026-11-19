@@ -1,7 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
+import '../core/export_service.dart';
 import '../core/library_service.dart';
+import '../core/models.dart';
 import '../player/player_service.dart';
 
 class LibraryScreen extends StatelessWidget {
@@ -55,9 +57,17 @@ class LibraryScreen extends StatelessWidget {
                     if (path != null) {
                       await library.attachSubtitle(track.id, path);
                     }
+                    return;
+                  }
+                  if (value == 'export') {
+                    await _saveTrack(context, track);
                   }
                 },
                 itemBuilder: (context) => const [
+                  PopupMenuItem(
+                    value: 'export',
+                    child: Text('Guardar en otro lugar'),
+                  ),
                   PopupMenuItem(value: 'subtitle', child: Text('Adjuntar SUB')),
                   PopupMenuItem(value: 'remove', child: Text('Eliminar')),
                 ],
@@ -66,6 +76,23 @@ class LibraryScreen extends StatelessWidget {
           },
         );
       },
+    );
+  }
+}
+
+Future<void> _saveTrack(BuildContext context, Track track) async {
+  try {
+    final saved = await context.read<ExportService>().saveFile(track);
+    if (!context.mounted) return;
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: Text(saved == null ? 'Guardado cancelado' : 'Cancion guardada'),
+      ),
+    );
+  } catch (error) {
+    if (!context.mounted) return;
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(content: Text('No se pudo guardar: $error')),
     );
   }
 }
