@@ -1,5 +1,5 @@
 const String appName = 'SoundBox';
-const String appVersion = '0.10.2';
+const String appVersion = '0.10.3';
 
 /// Los workflows inyectan el canal y el numero de build del release con
 /// `--dart-define`. Asi el numero de la etiqueta de GitHub siempre coincide
