@@ -24,7 +24,6 @@ class HomeScreen extends StatefulWidget {
 
 class _HomeScreenState extends State<HomeScreen> {
   int _index = 0;
-  double _direction = 1;
   UpdateService? _updates;
 
   late final List<Widget> _pages = const [
@@ -64,10 +63,7 @@ class _HomeScreenState extends State<HomeScreen> {
     if (index == _index) return;
     final prefs = context.read<UserPreferencesService>();
     if (prefs.haptics) HapticFeedback.selectionClick();
-    setState(() {
-      _direction = index > _index ? 1 : -1;
-      _index = index;
-    });
+    setState(() => _index = index);
   }
 
   @override
@@ -154,26 +150,9 @@ class _HomeScreenState extends State<HomeScreen> {
                   child: Stack(
                     children: [
                       Positioned.fill(
-                        child: AnimatedSwitcher(
-                          duration: const Duration(milliseconds: 340),
-                          switchInCurve: Curves.easeOutCubic,
-                          switchOutCurve: Curves.easeInCubic,
-                          transitionBuilder: (child, animation) {
-                            return SlideTransition(
-                              position: Tween<Offset>(
-                                begin: Offset(_direction * 0.12, 0),
-                                end: Offset.zero,
-                              ).animate(animation),
-                              child: FadeTransition(
-                                opacity: animation,
-                                child: child,
-                              ),
-                            );
-                          },
-                          child: KeyedSubtree(
-                            key: ValueKey<int>(_index),
-                            child: _pages[_index],
-                          ),
+                        child: IndexedStack(
+                          index: _index,
+                          children: _pages,
                         ),
                       ),
                       const FloatingDock(),
