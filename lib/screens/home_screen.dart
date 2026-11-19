@@ -1,13 +1,19 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:provider/provider.dart';
 
 import '../core/connectivity_service.dart';
 import '../core/library_service.dart';
-import '../widgets/mini_player.dart';
+import '../core/update_service.dart';
+import '../core/user_preferences.dart';
+import '../widgets/update_dialog.dart';
 import 'downloads_screen.dart';
 import 'library_screen.dart';
 import 'search_screen.dart';
 import 'settings_screen.dart';
+import 'tools_screen.dart';
 
 class HomeScreen extends StatefulWidget {
   const HomeScreen({super.key});
@@ -18,79 +24,155 @@ class HomeScreen extends StatefulWidget {
 
 class _HomeScreenState extends State<HomeScreen> {
   int _index = 0;
+  UpdateService? _updates;
 
   late final List<Widget> _pages = const [
     LibraryScreen(),
     SearchScreen(),
     DownloadsScreen(),
+    ToolsScreen(),
     SettingsScreen(),
   ];
 
   @override
+  void initState() {
+    super.initState();
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (!mounted) return;
+      final updates = context.read<UpdateService>();
+      _updates = updates;
+      updates.addListener(_maybePromptUpdate);
+      unawaited(updates.checkIfNeeded());
+      _maybePromptUpdate();
+    });
+  }
+
+  void _maybePromptUpdate() {
+    final updates = _updates;
+    if (!mounted || updates == null || !updates.shouldPrompt) return;
+    updates.markPromptShown();
+    unawaited(showUpdateDialog(context));
+  }
+
+  @override
+  void dispose() {
+    _updates?.removeListener(_maybePromptUpdate);
+    super.dispose();
+  }
+
+  void _goTo(int index) {
+    if (index == _index) return;
+    final prefs = context.read<UserPreferencesService>();
+    if (prefs.haptics) HapticFeedback.selectionClick();
+    setState(() => _index = index);
+  }
+
+  @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: AppBar(
-        title: const Text('SoundBox'),
-        actions: [
-          Consumer<ConnectivityService>(
-            builder: (context, connectivity, _) => Padding(
-              padding: const EdgeInsets.only(right: 16),
-              child: Icon(
-                connectivity.isOnline ? Icons.wifi : Icons.wifi_off,
-                color: connectivity.isOnline ? Colors.green : Colors.red,
-              ),
-            ),
-          ),
-        ],
-      ),
-      floatingActionButton: _index == 0 ? const _LibraryFab() : null,
-      body: Column(
-        children: [
-          Consumer<ConnectivityService>(
-            builder: (context, connectivity, _) {
-              if (connectivity.isOnline) return const SizedBox.shrink();
-              return Container(
-                width: double.infinity,
-                color: Colors.orange.shade900,
-                padding: const EdgeInsets.symmetric(vertical: 6),
-                child: const Text(
-                  'Sin conexion: solo biblioteca local disponible',
-                  textAlign: TextAlign.center,
-                  style: TextStyle(fontSize: 12),
+    return Consumer<UserPreferencesService>(
+      builder: (context, prefs, _) {
+        return Scaffold(
+          appBar: AppBar(
+            title: const Text('SoundBox'),
+            actions: [
+              Consumer<ConnectivityService>(
+                builder: (context, connectivity, _) => Container(
+                  margin: const EdgeInsets.only(right: 16),
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 10,
+                    vertical: 6,
+                  ),
+                  decoration: BoxDecoration(
+                    color: connectivity.isOnline
+                        ? Colors.green.withOpacity(0.14)
+                        : Colors.red.withOpacity(0.14),
+                    borderRadius: BorderRadius.circular(20),
+                  ),
+                  child: Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      Icon(
+                        connectivity.isOnline ? Icons.wifi : Icons.wifi_off,
+                        size: 16,
+                        color: connectivity.isOnline
+                            ? Colors.green
+                            : Colors.red,
+                      ),
+                      const SizedBox(width: 6),
+                      Text(
+                        connectivity.isOnline ? 'Online' : 'Offline',
+                        style: TextStyle(
+                          fontSize: 11,
+                          color: connectivity.isOnline
+                              ? Colors.green
+                              : Colors.red,
+                        ),
+                      ),
+                    ],
+                  ),
                 ),
-              );
-            },
+              ),
+            ],
           ),
-          Expanded(child: IndexedStack(index: _index, children: _pages)),
-          const MiniPlayer(),
-        ],
-      ),
-      bottomNavigationBar: NavigationBar(
-        selectedIndex: _index,
-        onDestinationSelected: (index) => setState(() => _index = index),
-        destinations: const [
-          NavigationDestination(
-            icon: Icon(Icons.library_music_outlined),
-            selectedIcon: Icon(Icons.library_music),
-            label: 'Biblioteca',
+          floatingActionButton: _index == 0 ? const _LibraryFab() : null,
+          body: Column(
+            children: [
+              Consumer<ConnectivityService>(
+                builder: (context, connectivity, _) {
+                  if (connectivity.isOnline) return const SizedBox.shrink();
+                  return Container(
+                    width: double.infinity,
+                    color: Colors.orange.shade900,
+                    padding: const EdgeInsets.symmetric(vertical: 6),
+                    child: const Text(
+                      'Sin conexion: solo biblioteca local disponible',
+                      textAlign: TextAlign.center,
+                      style: TextStyle(fontSize: 12),
+                    ),
+                  );
+                },
+              ),
+              Expanded(child: _pages[_index]),
+            ],
           ),
-          NavigationDestination(
-            icon: Icon(Icons.search_outlined),
-            selectedIcon: Icon(Icons.search),
-            label: 'Buscar',
+          bottomNavigationBar: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              NavigationBar(
+                selectedIndex: _index,
+                onDestinationSelected: _goTo,
+                destinations: const [
+                  NavigationDestination(
+                    icon: Icon(Icons.library_music_outlined),
+                    selectedIcon: Icon(Icons.library_music),
+                    label: 'Biblioteca',
+                  ),
+                  NavigationDestination(
+                    icon: Icon(Icons.search_outlined),
+                    selectedIcon: Icon(Icons.search),
+                    label: 'Buscar',
+                  ),
+                  NavigationDestination(
+                    icon: Icon(Icons.download_outlined),
+                    selectedIcon: Icon(Icons.download),
+                    label: 'Descargas',
+                  ),
+                  NavigationDestination(
+                    icon: Icon(Icons.construction_outlined),
+                    selectedIcon: Icon(Icons.construction),
+                    label: 'Herramientas',
+                  ),
+                  NavigationDestination(
+                    icon: Icon(Icons.settings_outlined),
+                    selectedIcon: Icon(Icons.settings),
+                    label: 'Ajustes',
+                  ),
+                ],
+              ),
+            ],
           ),
-          NavigationDestination(
-            icon: Icon(Icons.download_outlined),
-            selectedIcon: Icon(Icons.download),
-            label: 'Descargas',
-          ),
-          NavigationDestination(
-            icon: Icon(Icons.settings_outlined),
-            selectedIcon: Icon(Icons.settings),
-            label: 'Ajustes',
-          ),
-        ],
-      ),
+        );
+      },
     );
   }
 }
