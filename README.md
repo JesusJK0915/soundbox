@@ -19,11 +19,14 @@ Tu PC solo sirve para escribir codigo y hacer `push`.
 En **Ajustes → Formato de descarga** eliges el formato final y, para los
 formatos con perdida (MP3/M4A/OGG), el bitrate: 64, 96, 128, 192, 256 o 320
 kbps. La app baja el archivo original y lo convierte en el telefono con
-`ffmpeg-kit` (LGPL), sin subirlo a ningun servidor. FLAC y WAV ignoran el
+`ffmpeg-kit` (GPL), sin subirlo a ningun servidor. FLAC y WAV ignoran el
 bitrate. "Original (sin convertir)" guarda lo que ofrece la fuente.
 
 Si la conversion falla, se guarda el archivo original y se avisa en Descargas.
 Requiere Android 7.0 (API 24) o superior.
+
+El motor de conversion (`ffmpeg_kit_flutter_new`) se distribuye bajo GPLv3; su
+codigo fuente esta disponible en https://github.com/sk3llo/ffmpeg_kit_flutter .
 
 ## Guardar la musica en otra carpeta
 
