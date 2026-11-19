@@ -263,61 +263,56 @@ class _LibraryScreenState extends State<LibraryScreen> {
                 ],
               ),
             ),
-            AnimatedSize(
-              duration: const Duration(milliseconds: 240),
-              curve: Curves.easeOutCubic,
-              child: !hasSelection
-                  ? const SizedBox.shrink()
-                  : Container(
-                      margin: const EdgeInsets.fromLTRB(12, 2, 12, 6),
-                      padding: const EdgeInsets.symmetric(horizontal: 6),
-                      decoration: BoxDecoration(
-                        color: Theme.of(context).colorScheme.secondaryContainer,
-                        borderRadius: BorderRadius.circular(18),
-                      ),
-                      child: Row(
-                        children: [
-                          IconButton(
-                            tooltip: 'Salir de selección',
-                            icon: const Icon(Icons.close_rounded),
-                            onPressed: () => setState(() => _selected.clear()),
-                          ),
-                          Text('${_selected.length} seleccionada(s)'),
-                          const Spacer(),
-                          IconButton(
-                            tooltip: 'Seleccionar todo',
-                            icon: const Icon(Icons.select_all),
-                            onPressed: () => setState(() {
-                              _selected.addAll(tracks.map((t) => t.id));
-                            }),
-                          ),
-                          IconButton(
-                            tooltip: 'Añadir a la cola',
-                            icon: const Icon(Icons.queue_music),
-                            onPressed: () {
-                              final player = context.read<PlayerService>();
-                              for (final track in tracks.where(
-                                (t) => _selected.contains(t.id),
-                              )) {
-                                player.enqueue(track);
-                              }
-                              setState(() => _selected.clear());
-                            },
-                          ),
-                          IconButton(
-                            tooltip: 'Guardar selección',
-                            icon: const Icon(Icons.save_as_outlined),
-                            onPressed: () => _bulkExport(context),
-                          ),
-                          IconButton(
-                            tooltip: 'Eliminar selección',
-                            icon: const Icon(Icons.delete_outline),
-                            onPressed: () => _bulkDelete(context),
-                          ),
-                        ],
-                      ),
+            if (hasSelection)
+              Container(
+                margin: const EdgeInsets.fromLTRB(12, 2, 12, 6),
+                padding: const EdgeInsets.symmetric(horizontal: 6),
+                decoration: BoxDecoration(
+                  color: Theme.of(context).colorScheme.secondaryContainer,
+                  borderRadius: BorderRadius.circular(18),
+                ),
+                child: Row(
+                  children: [
+                    IconButton(
+                      tooltip: 'Salir de selección',
+                      icon: const Icon(Icons.close_rounded),
+                      onPressed: () => setState(() => _selected.clear()),
                     ),
-            ),
+                    Text('${_selected.length} seleccionada(s)'),
+                    const Spacer(),
+                    IconButton(
+                      tooltip: 'Seleccionar todo',
+                      icon: const Icon(Icons.select_all),
+                      onPressed: () => setState(() {
+                        _selected.addAll(tracks.map((t) => t.id));
+                      }),
+                    ),
+                    IconButton(
+                      tooltip: 'Añadir a la cola',
+                      icon: const Icon(Icons.queue_music),
+                      onPressed: () {
+                        final player = context.read<PlayerService>();
+                        for (final track in tracks.where(
+                          (t) => _selected.contains(t.id),
+                        )) {
+                          player.enqueue(track);
+                        }
+                        setState(() => _selected.clear());
+                      },
+                    ),
+                    IconButton(
+                      tooltip: 'Guardar selección',
+                      icon: const Icon(Icons.save_as_outlined),
+                      onPressed: () => _bulkExport(context),
+                    ),
+                    IconButton(
+                      tooltip: 'Eliminar selección',
+                      icon: const Icon(Icons.delete_outline),
+                      onPressed: () => _bulkDelete(context),
+                    ),
+                  ],
+                ),
+              ),
             Expanded(
               child: tracks.isEmpty
                   ? _EmptyLibrary(filter: _filter, query: _search.text)
@@ -346,15 +341,9 @@ class _LibraryScreenState extends State<LibraryScreen> {
       itemBuilder: (context, index) {
         final track = tracks[index];
         final selected = _selected.contains(track.id);
-        return TweenAnimationBuilder<double>(
+        return ListTile(
           key: ValueKey<String>(track.id),
-          tween: Tween<double>(begin: 0.96, end: 1),
-          duration: const Duration(milliseconds: 320),
-          curve: Curves.easeOutCubic,
-          builder: (context, scale, _) => Transform.scale(
-            scale: scale,
-            child: ListTile(
-              selected: selected,
+          selected: selected,
               selectedTileColor:
                   Theme.of(context).colorScheme.secondaryContainer,
               leading: ClipOval(
@@ -432,8 +421,6 @@ class _LibraryScreenState extends State<LibraryScreen> {
                         PopupMenuItem(value: 'remove', child: Text('Eliminar')),
                       ],
                     ),
-            ),
-          ),
         );
       },
     );
@@ -689,25 +676,17 @@ class _EmptyLibrary extends StatelessWidget {
     return Center(
       child: Padding(
         padding: const EdgeInsets.all(28),
-        child: TweenAnimationBuilder<double>(
-          tween: Tween<double>(begin: 0.8, end: 1),
-          duration: const Duration(milliseconds: 500),
-          curve: Curves.easeOutBack,
-          builder: (context, scale, _) => Transform.scale(
-            scale: scale,
-            child: Column(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                Icon(Icons.music_off_rounded, size: 72, color: scheme.primary),
-                const SizedBox(height: 18),
-                Text(
-                  message,
-                  textAlign: TextAlign.center,
-                  style: TextStyle(color: scheme.onSurfaceVariant),
-                ),
-              ],
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Icon(Icons.music_off_rounded, size: 72, color: scheme.primary),
+            const SizedBox(height: 18),
+            Text(
+              message,
+              textAlign: TextAlign.center,
+              style: TextStyle(color: scheme.onSurfaceVariant),
             ),
-          ),
+          ],
         ),
       ),
     );

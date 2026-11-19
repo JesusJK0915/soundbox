@@ -25,9 +25,7 @@ class MiniPlayer extends StatelessWidget {
                 .toDouble();
         final scheme = playerSchemeFor(context, track);
 
-        return AnimatedTheme(
-          duration: const Duration(milliseconds: 600),
-          curve: Curves.easeOutCubic,
+        return Theme(
           data: Theme.of(context).copyWith(colorScheme: scheme),
           child: Padding(
             padding: const EdgeInsets.fromLTRB(10, 4, 10, 8),
@@ -59,14 +57,11 @@ class MiniPlayer extends StatelessWidget {
                       padding: const EdgeInsets.fromLTRB(12, 10, 8, 10),
                       child: Row(
                         children: [
-                          Hero(
-                            tag: playerArtHeroTag(track),
-                            child: ClipOval(
-                              child: SizedBox(
-                                width: 46,
-                                height: 46,
-                                child: TrackArtwork(track: track, iconSize: 22),
-                              ),
+                          ClipOval(
+                            child: SizedBox(
+                              width: 46,
+                              height: 46,
+                              child: TrackArtwork(track: track, iconSize: 22),
                             ),
                           ),
                           const SizedBox(width: 12),
@@ -107,15 +102,10 @@ class MiniPlayer extends StatelessWidget {
                               minimumSize: const Size(44, 44),
                               shape: const StadiumBorder(),
                             ),
-                            icon: AnimatedSwitcher(
-                              duration: const Duration(milliseconds: 180),
-                              switchInCurve: Curves.easeOutBack,
-                              child: Icon(
-                                player.isPlaying
-                                    ? Icons.pause_rounded
-                                    : Icons.play_arrow_rounded,
-                                key: ValueKey<bool>(player.isPlaying),
-                              ),
+                            icon: Icon(
+                              player.isPlaying
+                                  ? Icons.pause_rounded
+                                  : Icons.play_arrow_rounded,
                             ),
                             onPressed: () => player.isPlaying
                                 ? player.pause()

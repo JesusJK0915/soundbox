@@ -31,9 +31,7 @@ class PlayerScreen extends StatelessWidget {
         final maxMs = duration.inMilliseconds < 1 ? 1 : duration.inMilliseconds;
         final currentMs = player.position.inMilliseconds.clamp(0, maxMs);
 
-        return AnimatedTheme(
-          duration: const Duration(milliseconds: 700),
-          curve: Curves.easeOutCubic,
+        return Theme(
           data: Theme.of(context).copyWith(
             colorScheme: scheme,
             scaffoldBackgroundColor: scheme.surface,
@@ -79,26 +77,17 @@ class PlayerScreen extends StatelessWidget {
               ),
               title: const Text('Suena ahora'),
               actions: [
-                AnimatedScale(
-                  scale: isFavorite ? 1.12 : 1,
-                  duration: const Duration(milliseconds: 240),
-                  curve: Curves.easeOutBack,
-                  child: IconButton(
-                    tooltip: isFavorite
-                        ? 'Quitar de favoritos'
-                        : 'Añadir a favoritos',
-                    icon: AnimatedSwitcher(
-                      duration: const Duration(milliseconds: 200),
-                      child: Icon(
-                        isFavorite ? Icons.favorite : Icons.favorite_border,
-                        key: ValueKey<bool>(isFavorite),
-                      ),
-                    ),
-                    onPressed: () async {
-                      await prefs.toggleFavorite(track.id);
-                      if (prefs.haptics) HapticFeedback.selectionClick();
-                    },
+                IconButton(
+                  tooltip: isFavorite
+                      ? 'Quitar de favoritos'
+                      : 'Añadir a favoritos',
+                  icon: Icon(
+                    isFavorite ? Icons.favorite : Icons.favorite_border,
                   ),
+                  onPressed: () async {
+                    await prefs.toggleFavorite(track.id);
+                    if (prefs.haptics) HapticFeedback.selectionClick();
+                  },
                 ),
                 IconButton(
                   tooltip: 'Letra',
@@ -183,21 +172,11 @@ class PlayerScreen extends StatelessWidget {
                                             }
                                           }
                                         : null,
-                                    child: _HeroArtwork(
-                                      track: track,
-                                      isPlaying: player.isPlaying,
-                                    ),
+                                    child: _HeroArtwork(track: track),
                                   ),
                                 ),
                                 const SizedBox(height: 28),
-                                AnimatedSwitcher(
-                                  duration: const Duration(milliseconds: 350),
-                                  switchInCurve: Curves.easeOutCubic,
-                                  child: _TrackInfo(
-                                    key: ValueKey<String>(track.id),
-                                    track: track,
-                                  ),
-                                ),
+                                _TrackInfo(track: track),
                                 const SizedBox(height: 12),
                                 _MetaChips(track: track),
                                 if (player.speed - 1.0 != 0)
@@ -296,8 +275,7 @@ class _SleepBanner extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final scheme = Theme.of(context).colorScheme;
-    return AnimatedContainer(
-      duration: const Duration(milliseconds: 300),
+    return Container(
       margin: const EdgeInsets.only(top: 10),
       padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
       decoration: BoxDecoration(
@@ -378,9 +356,7 @@ class _AmbientBackground extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Positioned.fill(
-      child: AnimatedContainer(
-        duration: const Duration(milliseconds: 800),
-        curve: Curves.easeOutCubic,
+      child: Container(
         decoration: BoxDecoration(
           gradient: LinearGradient(
             colors: [
@@ -394,18 +370,14 @@ class _AmbientBackground extends StatelessWidget {
         ),
         child: Stack(
           children: [
-            AnimatedPositioned(
-              duration: const Duration(milliseconds: 1200),
-              curve: Curves.easeOutCubic,
-              top: isPlaying ? -96 : -56,
-              left: isPlaying ? -48 : -12,
+            Positioned(
+              top: -56,
+              left: -12,
               child: _Orb(color: scheme.primary.withOpacity(0.18)),
             ),
-            AnimatedPositioned(
-              duration: const Duration(milliseconds: 1200),
-              curve: Curves.easeOutCubic,
-              bottom: isPlaying ? -120 : -80,
-              right: isPlaying ? -72 : -32,
+            Positioned(
+              bottom: -80,
+              right: -32,
               child: _Orb(color: scheme.tertiary.withOpacity(0.16)),
             ),
           ],
@@ -431,49 +403,34 @@ class _Orb extends StatelessWidget {
 }
 
 class _HeroArtwork extends StatelessWidget {
-  const _HeroArtwork({required this.track, required this.isPlaying});
+  const _HeroArtwork({required this.track});
 
   final Track track;
-  final bool isPlaying;
 
   @override
   Widget build(BuildContext context) {
     final scheme = Theme.of(context).colorScheme;
-    return TweenAnimationBuilder<double>(
-      key: ValueKey<String>(track.id),
-      tween: Tween<double>(begin: 0.92, end: isPlaying ? 1 : 0.97),
-      duration: const Duration(milliseconds: 650),
-      curve: Curves.easeOutBack,
-      builder: (context, scale, _) {
-        return Transform.scale(
-          scale: scale,
-          child: Hero(
-            tag: playerArtHeroTag(track),
-            child: Container(
-              width: 224,
-              height: 224,
-              clipBehavior: Clip.antiAlias,
-              decoration: BoxDecoration(
-                color: scheme.secondaryContainer,
-                borderRadius: BorderRadius.circular(34),
-                boxShadow: [
-                  BoxShadow(
-                    color: scheme.shadow.withOpacity(0.28),
-                    blurRadius: 34,
-                    offset: const Offset(0, 18),
-                  ),
-                ],
-              ),
-              child: context.watch<UserPreferencesService>().artworkBlur
-                  ? ImageFiltered(
-                      imageFilter: ImageFilter.blur(sigmaX: 3, sigmaY: 3),
-                      child: TrackArtwork(track: track, iconSize: 104),
-                    )
-                  : TrackArtwork(track: track, iconSize: 104),
-            ),
+    return Container(
+      width: 224,
+      height: 224,
+      clipBehavior: Clip.antiAlias,
+      decoration: BoxDecoration(
+        color: scheme.secondaryContainer,
+        borderRadius: BorderRadius.circular(34),
+        boxShadow: [
+          BoxShadow(
+            color: scheme.shadow.withOpacity(0.28),
+            blurRadius: 34,
+            offset: const Offset(0, 18),
           ),
-        );
-      },
+        ],
+      ),
+      child: context.watch<UserPreferencesService>().artworkBlur
+          ? ImageFiltered(
+              imageFilter: ImageFilter.blur(sigmaX: 3, sigmaY: 3),
+              child: TrackArtwork(track: track, iconSize: 104),
+            )
+          : TrackArtwork(track: track, iconSize: 104),
     );
   }
 }
@@ -671,23 +628,17 @@ class _Controls extends StatelessWidget {
           size: 30,
           onPressed: player.skipPrevious,
         ),
-        AnimatedScale(
-          scale: player.isPlaying ? 1.06 : 1,
-          duration: const Duration(milliseconds: 260),
-          curve: Curves.easeOutBack,
-          child: IconButton(
-            tooltip: player.isPlaying ? 'Pausar' : 'Reproducir',
-            style: IconButton.styleFrom(
-              backgroundColor: scheme.primary,
-              foregroundColor: scheme.onPrimary,
-              minimumSize: const Size(76, 76),
-              shape: const StadiumBorder(),
-              elevation: 4,
-            ),
-            icon: _PlayPauseIcon(isPlaying: player.isPlaying),
-            onPressed: () =>
-                player.isPlaying ? player.pause() : player.play(),
+        IconButton(
+          tooltip: player.isPlaying ? 'Pausar' : 'Reproducir',
+          style: IconButton.styleFrom(
+            backgroundColor: scheme.primary,
+            foregroundColor: scheme.onPrimary,
+            minimumSize: const Size(76, 76),
+            shape: const StadiumBorder(),
+            elevation: 4,
           ),
+          icon: _PlayPauseIcon(isPlaying: player.isPlaying),
+          onPressed: () => player.isPlaying ? player.pause() : player.play(),
         ),
         _smallControl(
           icon: Icons.skip_next_rounded,
@@ -743,14 +694,9 @@ class _PlayPauseIcon extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return AnimatedSwitcher(
-      duration: const Duration(milliseconds: 200),
-      switchInCurve: Curves.easeOutBack,
-      child: Icon(
-        isPlaying ? Icons.pause_rounded : Icons.play_arrow_rounded,
-        key: ValueKey<bool>(isPlaying),
-        size: 38,
-      ),
+    return Icon(
+      isPlaying ? Icons.pause_rounded : Icons.play_arrow_rounded,
+      size: 38,
     );
   }
 }
@@ -1038,74 +984,36 @@ class _QueueSheet extends StatelessWidget {
   }
 }
 
-class _PlayingBars extends StatefulWidget {
+class _PlayingBars extends StatelessWidget {
   const _PlayingBars({required this.isPlaying});
 
   final bool isPlaying;
 
   @override
-  State<_PlayingBars> createState() => _PlayingBarsState();
-}
-
-class _PlayingBarsState extends State<_PlayingBars>
-    with SingleTickerProviderStateMixin {
-  late final AnimationController _controller = AnimationController(
-    vsync: this,
-    duration: const Duration(milliseconds: 900),
-  )..repeat(reverse: true);
-
-  @override
-  void dispose() {
-    _controller.dispose();
-    super.dispose();
-  }
-
-  @override
   Widget build(BuildContext context) {
     final scheme = Theme.of(context).colorScheme;
-    return AnimatedOpacity(
-      opacity: widget.isPlaying ? 1 : 0.35,
-      duration: const Duration(milliseconds: 250),
-      child: AnimatedBuilder(
-        animation: _controller,
-        builder: (context, _) {
-          return SizedBox(
-            width: 22,
-            height: 20,
-            child: Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-              crossAxisAlignment: CrossAxisAlignment.end,
-              children: [
-                _bar(scheme, 0.0, 0.55, 5, 18),
-                _bar(scheme, 0.2, 0.8, 8, 20),
-                _bar(scheme, 0.4, 1.0, 4, 15),
-              ],
-            ),
-          );
-        },
+    final color = isPlaying ? scheme.primary : scheme.outline;
+    return SizedBox(
+      width: 22,
+      height: 20,
+      child: Row(
+        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+        crossAxisAlignment: CrossAxisAlignment.end,
+        children: [
+          _bar(color, 14),
+          _bar(color, 20),
+          _bar(color, 16),
+        ],
       ),
     );
   }
 
-  Widget _bar(ColorScheme scheme, double begin, double end, double min, double max) {
-    final height = Tween<double>(begin: min, end: max).animate(
-      CurvedAnimation(
-        parent: _controller,
-        curve: Interval(begin, end, curve: Curves.easeInOut),
-      ),
-    );
-    return AnimatedBuilder(
-      animation: height,
-      builder: (context, _) {
-        return Container(
-          width: 4,
-          height: height.value,
-          decoration: BoxDecoration(
-            color: scheme.primary,
-            borderRadius: BorderRadius.circular(4),
-          ),
-        );
-      },
-    );
-  }
+  Widget _bar(Color color, double height) => Container(
+        width: 4,
+        height: height,
+        decoration: BoxDecoration(
+          color: color,
+          borderRadius: BorderRadius.circular(4),
+        ),
+      );
 }

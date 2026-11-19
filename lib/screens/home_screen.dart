@@ -77,8 +77,7 @@ class _HomeScreenState extends State<HomeScreen> {
             title: const Text('SoundBox'),
             actions: [
               Consumer<ConnectivityService>(
-                builder: (context, connectivity, _) => AnimatedContainer(
-                  duration: const Duration(milliseconds: 400),
+                builder: (context, connectivity, _) => Container(
                   margin: const EdgeInsets.only(right: 16),
                   padding: const EdgeInsets.symmetric(
                     horizontal: 10,
@@ -117,81 +116,60 @@ class _HomeScreenState extends State<HomeScreen> {
             ],
           ),
           floatingActionButton: _index == 0 ? const _LibraryFab() : null,
-          body: GestureDetector(
-            onHorizontalDragEnd: (details) {
-              if (!prefs.gestures) return;
-              final velocity = details.primaryVelocity ?? 0;
-              if (velocity.abs() < 350) return;
-              if (velocity < 0 && _index < _pages.length - 1) {
-                _goTo(_index + 1);
-              } else if (velocity > 0 && _index > 0) {
-                _goTo(_index - 1);
-              }
-            },
-            child: Column(
-              children: [
-                Consumer<ConnectivityService>(
-                  builder: (context, connectivity, _) => AnimatedSize(
-                    duration: const Duration(milliseconds: 300),
-                    curve: Curves.easeOutCubic,
-                    child: connectivity.isOnline
-                        ? const SizedBox.shrink()
-                        : Container(
-                            width: double.infinity,
-                            color: Colors.orange.shade900,
-                            padding: const EdgeInsets.symmetric(vertical: 6),
-                            child: const Text(
-                              'Sin conexion: solo biblioteca local disponible',
-                              textAlign: TextAlign.center,
-                              style: TextStyle(fontSize: 12),
-                            ),
-                          ),
-                  ),
-                ),
-                Expanded(
-                  child: Stack(
-                    children: [
-                      Positioned.fill(
-                        child: IndexedStack(
-                          index: _index,
-                          children: _pages,
-                        ),
-                      ),
-                      const FloatingDock(),
-                    ],
-                  ),
-                ),
-              ],
-            ),
+          body: Column(
+            children: [
+              Consumer<ConnectivityService>(
+                builder: (context, connectivity, _) {
+                  if (connectivity.isOnline) return const SizedBox.shrink();
+                  return Container(
+                    width: double.infinity,
+                    color: Colors.orange.shade900,
+                    padding: const EdgeInsets.symmetric(vertical: 6),
+                    child: const Text(
+                      'Sin conexion: solo biblioteca local disponible',
+                      textAlign: TextAlign.center,
+                      style: TextStyle(fontSize: 12),
+                    ),
+                  );
+                },
+              ),
+              Expanded(child: _pages[_index]),
+            ],
           ),
-          bottomNavigationBar: NavigationBar(
-            selectedIndex: _index,
-            onDestinationSelected: _goTo,
-            destinations: const [
-              NavigationDestination(
-                icon: Icon(Icons.library_music_outlined),
-                selectedIcon: Icon(Icons.library_music),
-                label: 'Biblioteca',
-              ),
-              NavigationDestination(
-                icon: Icon(Icons.search_outlined),
-                selectedIcon: Icon(Icons.search),
-                label: 'Buscar',
-              ),
-              NavigationDestination(
-                icon: Icon(Icons.download_outlined),
-                selectedIcon: Icon(Icons.download),
-                label: 'Descargas',
-              ),
-              NavigationDestination(
-                icon: Icon(Icons.construction_outlined),
-                selectedIcon: Icon(Icons.construction),
-                label: 'Herramientas',
-              ),
-              NavigationDestination(
-                icon: Icon(Icons.settings_outlined),
-                selectedIcon: Icon(Icons.settings),
-                label: 'Ajustes',
+          bottomNavigationBar: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              const FloatingDock(),
+              NavigationBar(
+                selectedIndex: _index,
+                onDestinationSelected: _goTo,
+                destinations: const [
+                  NavigationDestination(
+                    icon: Icon(Icons.library_music_outlined),
+                    selectedIcon: Icon(Icons.library_music),
+                    label: 'Biblioteca',
+                  ),
+                  NavigationDestination(
+                    icon: Icon(Icons.search_outlined),
+                    selectedIcon: Icon(Icons.search),
+                    label: 'Buscar',
+                  ),
+                  NavigationDestination(
+                    icon: Icon(Icons.download_outlined),
+                    selectedIcon: Icon(Icons.download),
+                    label: 'Descargas',
+                  ),
+                  NavigationDestination(
+                    icon: Icon(Icons.construction_outlined),
+                    selectedIcon: Icon(Icons.construction),
+                    label: 'Herramientas',
+                  ),
+                  NavigationDestination(
+                    icon: Icon(Icons.settings_outlined),
+                    selectedIcon: Icon(Icons.settings),
+                    label: 'Ajustes',
+                  ),
+                ],
               ),
             ],
           ),
