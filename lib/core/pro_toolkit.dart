@@ -980,7 +980,7 @@ class DownloadInsightsPro {
   }
 
   static bool isPlainFileUrl(String url) {
-    final path = urlWithoutQuery(url).toLowerCase();
+    final path = url.split(RegExp(r'[?#]')).first.toLowerCase();
     return isAudioExtension(path.split('.').last);
   }
 
