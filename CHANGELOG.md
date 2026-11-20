@@ -734,7 +734,7 @@ Release estable. No es alpha ni beta.
 26. Workflow `release.yml` publica `prerelease: false`.
 27. Workflow `check.yml` valida ramas `release/**`.
 28. Tests de actualizaciones cubren estable y semver.
-29. Tests del toolkit cubren las 100 funciones.
+29. Tests del toolkit cubren utilidades del toolkit.
 30. README elimina referencias al dock flotante.
 31. README documenta el reproductor centrado.
 32. README documenta el gusanito Material Expressive.

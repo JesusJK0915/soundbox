@@ -88,7 +88,8 @@ Esta versión es una release **estable** (no alpha ni beta). Incluye:
   activados.
 - Historial con botones rellenos y animación de pulsación al tocarlos.
 - **300 funciones útiles** en `lib/core/pro_toolkit.dart` (100 originales más
-  200 nuevas), cubiertas por `test/pro_toolkit_test.dart`.
+  200 nuevas), cubiertas por `test/pro_toolkit_test.dart` y
+  `test/pro_toolkit_expanded_test.dart`.
 - **300 mejoras**: 100 nuevas sobre las funciones recientes, 100 nuevas sobre
   funciones anteriores y las 100 mejoras de la versión 1.0.3.
 - Sin dock flotante; el mini reproductor es fijo.
