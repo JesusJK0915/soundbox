@@ -987,11 +987,8 @@ class DownloadInsightsPro {
   static String hostFromUrl(String url) =>
       Uri.tryParse(url)?.host.toLowerCase() ?? '';
 
-  static String urlWithoutQuery(String url) {
-    final uri = Uri.tryParse(url);
-    if (uri == null) return url;
-    return uri.replace(query: '', fragment: '').toString();
-  }
+  static String urlWithoutQuery(String url) =>
+      url.split(RegExp(r'[?#]')).first;
 
   static String urlScheme(String url) =>
       Uri.tryParse(url)?.scheme.toLowerCase() ?? '';
