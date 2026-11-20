@@ -738,14 +738,14 @@ class PlaybackInsightsPro {
       position <= const Duration(seconds: 3);
 
   static Duration forwardSeek(Duration position, Duration duration, int seconds) =>
-      LibraryToolsPro.clampDuration(
+      PlaybackToolsPro.clampDuration(
         position + Duration(seconds: seconds),
         Duration.zero,
         duration,
       );
 
   static Duration backwardSeek(Duration position, int seconds) =>
-      LibraryToolsPro.clampDuration(
+      PlaybackToolsPro.clampDuration(
         position - Duration(seconds: seconds),
         Duration.zero,
         position,
@@ -883,7 +883,7 @@ class SearchInsightsPro {
     var best = -1;
     var bestScore = -1;
     for (var i = 0; i < tracks.length; i++) {
-      final score = LibraryToolsPro.searchScore(tracks[i], query);
+      final score = LibraryToolsPro.searchScore(query, tracks[i].title);
       if (score > bestScore) {
         bestScore = score;
         best = i;
@@ -894,16 +894,23 @@ class SearchInsightsPro {
 
   static List<Track> sortedByQuery(List<Track> tracks, String query) {
     final copy = List<Track>.from(tracks);
-    copy.sort((a, b) => LibraryToolsPro.searchScore(b, query)
-        .compareTo(LibraryToolsPro.searchScore(a, query)));
+    copy.sort((a, b) => LibraryToolsPro.searchScore(query, b.title)
+        .compareTo(LibraryToolsPro.searchScore(query, a.title)));
     return copy;
   }
 
   static String normalizeQuery(String query) =>
       LibraryToolsPro.normalizeText(query).replaceAll(RegExp(r'\s+'), ' ').trim();
 
-  static String stripQuotes(String query) =>
-      query.replaceAll(RegExp(r'^["\']+|["\']+$'), '').trim();
+  static String stripQuotes(String query) {
+    var value = query.trim();
+    while (value.length >= 2 &&
+        ((value.startsWith('"') && value.endsWith('"')) ||
+            (value.startsWith("'") && value.endsWith("'")))) {
+      value = value.substring(1, value.length - 1);
+    }
+    return value.trim();
+  }
 
   static String expandWildcard(String query) =>
       query.replaceAll('*', '').replaceAll('%', '').trim();
@@ -1151,11 +1158,13 @@ class PlaylistInsightsPro {
       .intersection(uniqueTrackIds(b).toSet())
       .length;
 
-  static List<Track> mergePlaylists(List<Track> a, List<Track> b) =>
-      LibraryToolsPro.mergeUnique([...a, ...b]);
+  static List<Track> mergePlaylists(List<Track> a, List<Track> b) {
+    final seen = <String>{};
+    return [...a, ...b].where((track) => seen.add(track.id)).toList();
+  }
 
   static List<Track> shuffleWithSeed(List<Track> tracks, int seed) {
-    final indices = LibraryToolsPro.shuffledIndices(tracks.length, seed);
+    final indices = PlaybackToolsPro.shuffledIndices(tracks.length, seed);
     return indices.map((i) => tracks[i]).toList();
   }
 
@@ -1175,7 +1184,7 @@ Duration? _durationFromMatch(RegExpMatch match) {
 
 /// Letras y sincronizacion: parseo, ventanas y correccion de offsets.
 class LyricsInsightsPro {
-  static int lrcLineCount(String text) => LibraryToolsPro.stripLrcMeta(text)
+  static int lrcLineCount(String text) => LyricsToolsPro.stripLrcMeta(text)
       .split('\n')
       .where((line) => line.trim().isNotEmpty)
       .length;
