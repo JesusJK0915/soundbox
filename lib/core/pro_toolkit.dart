@@ -641,10 +641,17 @@ class LibraryInsightsPro {
   static int uniqueAlbums(List<Track> tracks) =>
       tracks.map((t) => LibraryToolsPro.normalizeText(t.album ?? '')).toSet().length;
 
-  static int trackCountByArtist(List<Track> tracks, String artist) => tracks
-      .where((t) => LibraryToolsPro.artistKey(t.artist) ==
-          LibraryToolsPro.artistKey(artist))
-      .length;
+  static int trackCountByArtist(List<Track> tracks, String artist) {
+    final wanted = LibraryToolsPro.splitArtists(artist)
+        .map(LibraryToolsPro.artistKey)
+        .toSet();
+    return tracks.where((track) {
+      final names = LibraryToolsPro.splitArtists(track.artist)
+          .map(LibraryToolsPro.artistKey)
+          .toSet();
+      return names.intersection(wanted).isNotEmpty;
+    }).length;
+  }
 
   static int trackCountByAlbum(List<Track> tracks, String album) => tracks
       .where((t) =>
@@ -983,7 +990,7 @@ class DownloadInsightsPro {
   static String urlWithoutQuery(String url) {
     final uri = Uri.tryParse(url);
     if (uri == null) return url;
-    return uri.replace(query: null, fragment: null).toString();
+    return uri.replace(query: '', fragment: '').toString();
   }
 
   static String urlScheme(String url) =>
@@ -1237,9 +1244,14 @@ class LyricsInsightsPro {
       line.replaceAll(RegExp(r'^\[[^\]]+\]\s*'), '').trim();
 
   static String lrcTagValue(String text, String tag) {
-    final match = RegExp('@$tag=([^\\r\\n]+)', caseSensitive: false)
+    final escaped = RegExp.escape(tag);
+    final bracket = RegExp('\\[\\s*$escaped\\s*:([^\\]\\r\\n]+)',
+            caseSensitive: false)
         .firstMatch(text);
-    return match?.group(1)?.trim() ?? '';
+    if (bracket != null) return bracket.group(1)!.trim();
+    final at = RegExp('@$escaped=([^\\r\\n]+)', caseSensitive: false)
+        .firstMatch(text);
+    return at?.group(1)?.trim() ?? '';
   }
 
   static Map<String, String> metadataTags(String text) {
