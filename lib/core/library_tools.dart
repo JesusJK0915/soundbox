@@ -6,6 +6,7 @@ import 'package:path/path.dart' as p;
 import 'package:shared_preferences/shared_preferences.dart';
 
 import 'models.dart';
+import 'pro_toolkit.dart';
 
 /// Grupo de pistas consideradas duplicadas por título/artista/duración.
 class DuplicateGroup {
@@ -169,8 +170,8 @@ class LibraryToolsService extends ChangeNotifier {
     for (final track in tracks) {
       final duration = ((track.durationMs ?? 0) ~/ 1000).toString();
       final key = [
-        track.title.trim().toLowerCase().replaceAll(RegExp(r'\s+'), ' '),
-        track.artist.trim().toLowerCase().replaceAll(RegExp(r'\s+'), ' '),
+        LibraryToolsPro.titleKey(track.title),
+        LibraryToolsPro.artistKey(track.artist),
         duration,
       ].join('|');
       groups.putIfAbsent(key, () => <Track>[]).add(track);

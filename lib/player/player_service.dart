@@ -8,6 +8,7 @@ import '../core/library_service.dart';
 import '../core/listening_stats.dart';
 import '../core/lyrics_service.dart';
 import '../core/models.dart';
+import '../core/pro_toolkit.dart';
 import '../core/user_preferences.dart';
 
 /// Velocidades ofrecidas en el reproductor.
@@ -338,7 +339,13 @@ class PlayerService extends ChangeNotifier {
   Future<void> play() => _player.play();
   Future<void> pause() => _player.pause();
   Future<void> stop() => _player.stop();
-  Future<void> seek(Duration position) => _player.seek(position);
+  Future<void> seek(Duration position) {
+    final duration = _player.duration;
+    final safe = duration == null
+        ? position
+        : PlaybackToolsPro.seekClamp(position, duration);
+    return _player.seek(safe);
+  }
 
   Future<void> setVolume(double volume) async {
     await _player.setVolume(volume);
@@ -365,8 +372,12 @@ class PlayerService extends ChangeNotifier {
         return scoreB.compareTo(scoreA);
       });
     }
-    rest.shuffle();
-    final ordered = <Track>[if (current != null) current, ...rest];
+    final indices = PlaybackToolsPro.shuffledIndices(
+      rest.length,
+      DateTime.now().millisecondsSinceEpoch,
+    );
+    final shuffledRest = indices.map((index) => rest[index]).toList();
+    final ordered = <Track>[if (current != null) current, ...shuffledRest];
     await setQueue(ordered, index: 0);
     await persistQueue();
   }

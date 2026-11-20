@@ -3,6 +3,7 @@ import 'dart:async';
 import 'package:dio/dio.dart';
 
 import 'models.dart';
+import 'pro_toolkit.dart';
 
 /// Resultado de una busqueda de letras en LRCLIB.
 class LyricsResult {
@@ -32,11 +33,10 @@ class LyricsResult {
   String? get lrcContent {
     final synced = syncedLyrics?.trim();
     if (synced != null && synced.isNotEmpty) return synced;
-    final plain = plainLyrics?.trim();
-    if (plain == null || plain.isEmpty) return null;
+    final plain = LyricsToolsPro.plainLyrics(plainLyrics ?? '');
+    if (plain.isEmpty) return null;
     return plain
         .split('\n')
-        .map((line) => line.trim())
         .where((line) => line.isNotEmpty)
         .map((line) => '[00:00.00]$line')
         .join('\n');
@@ -58,7 +58,7 @@ class LyricsResult {
 class LyricsService {
   static const baseUrl = 'https://lrclib.net';
   static const userAgent =
-      'SoundBox 0.11.0 (https://github.com/JesusJK0915/soundbox)';
+      'SoundBox 1.0.3 (https://github.com/JesusJK0915/soundbox)';
 
   final Dio _dio;
   final Map<String, LyricsResult?> _cache = <String, LyricsResult?>{};
@@ -81,9 +81,9 @@ class LyricsService {
   void dispose() => _closed = true;
 
   String _key(Track track) => [
-        track.title.trim().toLowerCase(),
-        track.artist.trim().toLowerCase(),
-        track.album?.trim().toLowerCase() ?? '',
+        LibraryToolsPro.titleKey(track.title),
+        LibraryToolsPro.artistKey(track.artist),
+        LibraryToolsPro.normalizeText(track.album ?? ''),
         (track.durationMs ?? 0).toString(),
       ].join('|');
 

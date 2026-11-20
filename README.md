@@ -17,31 +17,36 @@ Tu PC solo sirve para escribir codigo y hacer `push`.
 - **Guardar en otro lugar**: exporta una canción o toda la biblioteca a la carpeta que elijas (Descargas, Drive, etc.).
 - **Material You**: usa los colores del fondo de pantalla del teléfono en toda la app y en el reproductor.
 - **Metadatos**: lee artista, álbum, carátula, año, género, pista, bitrate y más de los archivos de audio.
-- **Dock flotante**: mini reproductor arrastrable que recuerda su posición.
-- **Pestañas animadas** con deslizamiento lateral y transiciones suaves.
+- **Mini reproductor fijo** en la parte inferior, sin dock flotante.
+- **Pestañas** con deslizamiento lateral.
 - **Favoritos, estadísticas y reanudación** de la reproducción donde la dejaste.
 - **Temporizador de sueño, velocidad de reproducción y letra** desde el reproductor.
 
 ## Interfaz y nuevas funciones
 
-- **Dock flotante**: arrastra el mini reproductor desde su tirador; se acopla
-  arriba o abajo y guarda la posición. Se puede ocultar en Ajustes.
-- **Pestañas animadas**: cambio con fundido y deslizamiento; también puedes
-  deslizar el dedo de izquierda a derecha para cambiar de pestaña.
+- **Mini reproductor fijo**: siempre visible en la parte inferior al escuchar
+  música; no hay dock flotante ni animaciones globales.
+- **Pestañas**: cambio con deslizamiento; también puedes deslizar el dedo de
+  izquierda a derecha para cambiar de pestaña.
 - **Biblioteca mejorada**: búsqueda local, filtros (Todas, Favoritas,
   Recientes, Más escuchadas), orden configurable, vista de lista o cuadrícula,
   reproducción de todo o en aleatorio y selección múltiple (añadir a la cola,
   guardar o eliminar varias canciones a la vez). Desliza hacia abajo para
   volver a leer los metadatos.
-- **Favoritos**: toca el corazón en el reproductor o en el dock; doble toque a
-  la carátula también lo marca como favorito (si los gestos están activos).
+- **Favoritos**: toca el corazón en el reproductor o en el mini reproductor;
+  doble toque a la carátula también lo marca como favorito (si los gestos están
+  activos).
 - **Estadísticas**: se cuenta cada reproducción y se guarda la posición de cada
   canción para continuar después de reiniciar. Ajustes muestra totales y permite
   reiniciar los datos.
-- **Reproductor**: temporizador de sueño (5 a 90 minutos, con +5 min y
-  cancelación), velocidad de 0,5× a 2×, retroceso/avance de 10 segundos,
-  letra incrustada, control de la cola (subir, bajar, quitar y limpiar) y
-  arrastre hacia abajo desde el tirador superior para cerrarlo.
+- **Reproductor centrado**: los controles quedan en el centro de la pantalla
+  y se adaptan al alto del teléfono, sin tener que deslizar. Mientras suena la
+  música aparece la **onda Material 3 Expressive** (“gusanito”) sobre los
+  controles; se puede desactivar en Ajustes. Incluye temporizador de sueño
+  (5 a 90 minutos, con +5 min y cancelación), velocidad de 0,5× a 2×,
+  retroceso/avance de 10 segundos, letra incrustada, control de la cola
+  (subir, bajar, quitar y limpiar) y arrastre hacia abajo desde el tirador
+  superior para cerrarlo.
 - **Apariencia**: tema del sistema, claro u oscuro, respuesta háptica y gestos
   configurables en **Ajustes → Interfaz y gestos**.
 
@@ -53,7 +58,8 @@ Play Store):
 - Al abrir la app comprueba si hay una versión nueva (máximo una vez cada
   6 horas) y muestra un diálogo con las notas del release.
 - El canal se detecta según la compilación: **alpha** busca
-  `v0.1.0-alpha.*` y **beta** busca `v0.2.0-beta.*`.
+  `v0.1.0-alpha.*`, **beta** busca `v0.2.0-beta.*` y la compilación
+  **estable** busca etiquetas `vX.Y.Z` sin guion (por ejemplo `v1.0.3`).
 - El APK se elige según la arquitectura del teléfono (`arm64-v8a`,
   `armeabi-v7a` o `x86_64`). Las compilaciones alpha usan `app-debug.apk`.
 - Puedes descargar e instalar desde el propio diálogo, abrir la página del
@@ -65,8 +71,28 @@ Play Store):
   errores: simplemente no hay comprobación hasta que vuelva la conexión.
 
 Los workflows inyectan `--dart-define=UPDATE_CHANNEL=...` y
-`--dart-define=UPDATE_BUILD=${{ github.run_number }}` para que el número de
-build comparado sea exactamente el mismo de la etiqueta publicada.
+`--dart-define=UPDATE_BUILD=<codigo>` para que el número de build comparado
+sea exactamente el mismo de la etiqueta publicada.
+
+## Versión estable 1.0.3
+
+Esta versión es una release **estable** (no alpha ni beta). Incluye:
+
+- Versión real de Android `1.0.3` con `versionCode 103`, generada desde
+  `pubspec.yaml` y los argumentos `--build-name` / `--build-number` del
+  workflow, sin el antiguo `0.1.0`.
+- Reproductor centrado con el indicador de carga Material Expressive 3
+  (gusanito) visible solo durante la reproducción.
+- **100 funciones nuevas útiles** en `lib/core/pro_toolkit.dart`, cubiertas
+  por `test/pro_toolkit_test.dart`.
+- **100 mejoras**: 50 sobre las funciones nuevas y 50 sobre funciones ya
+  existentes del reproductor, biblioteca, letras, descargas, ajustes y
+  mantenimiento.
+- Sin dock flotante; el mini reproductor es fijo.
+- Solo audio; se mantienen los proveedores legales y las letras automáticas
+  con LRCLIB (Recomendado), sin IA local.
+
+Consulta el detalle de funciones y mejoras en `CHANGELOG.md`.
 
 ## Metadatos y carátulas
 

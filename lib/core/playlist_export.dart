@@ -3,6 +3,7 @@ import 'dart:convert';
 import 'package:shared_preferences/shared_preferences.dart';
 
 import 'models.dart';
+import 'pro_toolkit.dart';
 
 /// Exporta colas, listas e historial a formatos portátiles (M3U/CSV/JSON).
 class PlaylistExportService {
@@ -20,13 +21,16 @@ class PlaylistExportService {
 
   /// M3U sencillo con rutas locales o URLs según la pista.
   String toM3u(Iterable<Track> tracks) {
-    final buffer = StringBuffer('#EXTM3U\n');
-    for (final track in tracks) {
-      final seconds = track.durationMs == null
-          ? -1
-          : (track.durationMs! ~/ 1000).toInt();
-      buffer.writeln('#EXTINF:$seconds,${track.artist} - ${track.title}');
-      buffer.writeln(track.sourceUrl);
+    final unique = PlaylistToolsPro.dedupeTracks(tracks.toList());
+    final buffer = StringBuffer('${PlaylistToolsPro.m3uHeader()}\n');
+    for (final track in unique) {
+      buffer.writeln(
+        PlaylistToolsPro.m3uEntry(
+          track.sourceUrl,
+          '${track.artist} - ${track.title}',
+          track.durationMs,
+        ),
+      );
     }
     return buffer.toString();
   }

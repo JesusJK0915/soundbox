@@ -1,3 +1,4 @@
+import 'dart:math' as math;
 import 'dart:ui' show ImageFilter;
 
 import 'package:flutter/material.dart';
@@ -137,83 +138,13 @@ class PlayerScreen extends StatelessWidget {
                   isPlaying: player.isPlaying,
                 ),
                 SafeArea(
-                  child: LayoutBuilder(
-                    builder: (context, constraints) {
-                      return SingleChildScrollView(
-                        child: ConstrainedBox(
-                          constraints: BoxConstraints(
-                            minHeight: constraints.maxHeight,
-                          ),
-                          child: Padding(
-                            padding: const EdgeInsets.fromLTRB(20, 76, 20, 28),
-                            child: Column(
-                              crossAxisAlignment: CrossAxisAlignment.stretch,
-                              children: [
-                                _DragHandle(prefs: prefs),
-                                const SizedBox(height: 4),
-                                Center(
-                                  child: GestureDetector(
-                                    onDoubleTap: prefs.gestures
-                                        ? () async {
-                                            await prefs.toggleFavorite(track.id);
-                                            if (prefs.haptics) {
-                                              HapticFeedback.mediumImpact();
-                                            }
-                                          }
-                                        : null,
-                                    onHorizontalDragEnd: prefs.swipeToSkip
-                                        ? (details) {
-                                            final velocity =
-                                                details.primaryVelocity ?? 0;
-                                            if (velocity > 400) {
-                                              player.skipPrevious();
-                                            } else if (velocity < -400) {
-                                              player.skipNext();
-                                            }
-                                          }
-                                        : null,
-                                    child: _HeroArtwork(track: track),
-                                  ),
-                                ),
-                                const SizedBox(height: 28),
-                                _TrackInfo(track: track),
-                                const SizedBox(height: 12),
-                                _MetaChips(track: track),
-                                if (player.speed - 1.0 != 0)
-                                  Padding(
-                                    padding: const EdgeInsets.only(top: 8),
-                                    child: Center(
-                                      child: Chip(
-                                        avatar: const Icon(Icons.speed, size: 15),
-                                        label: Text(
-                                          '${player.speed.toStringAsFixed(2)}×',
-                                        ),
-                                        visualDensity: VisualDensity.compact,
-                                      ),
-                                    ),
-                                  ),
-                                if (player.sleepActive)
-                                  _SleepBanner(player: player),
-                                const SizedBox(height: 28),
-                                _Progress(
-                                  currentMs: currentMs,
-                                  maxMs: maxMs,
-                                  position: player.position,
-                                  duration: duration,
-                                  onSeek: player.seek,
-                                ),
-                                const SizedBox(height: 20),
-                                _Controls(player: player),
-                                const SizedBox(height: 22),
-                                _VolumeControl(player: player),
-                                const SizedBox(height: 22),
-                                _QueuePreview(player: player),
-                              ],
-                            ),
-                          ),
-                        ),
-                      );
-                    },
+                  child: _PlayerBody(
+                    player: player,
+                    prefs: prefs,
+                    track: track,
+                    currentMs: currentMs,
+                    maxMs: maxMs,
+                    duration: duration,
                   ),
                 ),
                 SubtitleOverlay(
@@ -229,6 +160,237 @@ class PlayerScreen extends StatelessWidget {
       },
     );
   }
+}
+
+/// Cuerpo del reproductor que se adapta al alto real del telefono.
+///
+/// Los controles quedan siempre centrados y no hace falta deslizar: si la
+/// pantalla es baja se ocultan los extras y [FittedBox] escala el contenido.
+class _PlayerBody extends StatelessWidget {
+  const _PlayerBody({
+    required this.player,
+    required this.prefs,
+    required this.track,
+    required this.currentMs,
+    required this.maxMs,
+    required this.duration,
+  });
+
+  final PlayerService player;
+  final UserPreferencesService prefs;
+  final Track track;
+  final int currentMs;
+  final int maxMs;
+  final Duration duration;
+
+  @override
+  Widget build(BuildContext context) {
+    return LayoutBuilder(
+      builder: (context, constraints) {
+        final height = constraints.maxHeight;
+        final width = constraints.maxWidth;
+        final compact = height < 720;
+        final tiny = height < 560;
+
+        final artByWidth =
+            (compact ? width * 0.44 : width * 0.54).clamp(120.0, 264.0);
+        final artByHeight = height * (tiny ? 0.24 : 0.30);
+        final artSize = math.min(artByWidth, artByHeight).toDouble();
+
+        final showChips = !compact;
+        final showVolume = height >= 660;
+        final showQueue = height >= 840;
+        final contentWidth = (width - 32).clamp(260.0, 520.0).toDouble();
+
+        return Center(
+          child: FittedBox(
+            fit: BoxFit.scaleDown,
+            alignment: Alignment.center,
+            child: SizedBox(
+              width: contentWidth,
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                crossAxisAlignment: CrossAxisAlignment.stretch,
+                children: [
+                  _DragHandle(prefs: prefs),
+                  const SizedBox(height: 6),
+                  Center(
+                    child: GestureDetector(
+                      onDoubleTap: prefs.gestures
+                          ? () async {
+                              await prefs.toggleFavorite(track.id);
+                              if (prefs.haptics) {
+                                HapticFeedback.mediumImpact();
+                              }
+                            }
+                          : null,
+                      onHorizontalDragEnd: prefs.swipeToSkip
+                          ? (details) {
+                              final velocity = details.primaryVelocity ?? 0;
+                              if (velocity > 400) {
+                                player.skipPrevious();
+                              } else if (velocity < -400) {
+                                player.skipNext();
+                              }
+                            }
+                          : null,
+                      child: _HeroArtwork(track: track, size: artSize),
+                    ),
+                  ),
+                  const SizedBox(height: 14),
+                  _TrackInfo(track: track),
+                  if (showChips) ...[
+                    const SizedBox(height: 8),
+                    _MetaChips(track: track),
+                  ],
+                  if (player.speed - 1.0 != 0)
+                    Padding(
+                      padding: const EdgeInsets.only(top: 8),
+                      child: Center(
+                        child: Chip(
+                          avatar: const Icon(Icons.speed, size: 15),
+                          label: Text(
+                            '${player.speed.toStringAsFixed(2)}×',
+                          ),
+                          visualDensity: VisualDensity.compact,
+                        ),
+                      ),
+                    ),
+                  if (player.sleepActive) _SleepBanner(player: player),
+                  const SizedBox(height: 12),
+                  _Progress(
+                    currentMs: currentMs,
+                    maxMs: maxMs,
+                    position: player.position,
+                    duration: duration,
+                    onSeek: player.seek,
+                  ),
+                  const SizedBox(height: 6),
+                  if (player.isPlaying && prefs.expressiveWorm)
+                    _ExpressiveWorm(
+                      color: Theme.of(context).colorScheme.primary,
+                    )
+                  else
+                    const SizedBox(height: 22),
+                  const SizedBox(height: 6),
+                  _Controls(player: player),
+                  if (showVolume) ...[
+                    const SizedBox(height: 10),
+                    _VolumeControl(player: player),
+                  ],
+                  if (showQueue) ...[
+                    const SizedBox(height: 10),
+                    _QueuePreview(player: player),
+                  ],
+                ],
+              ),
+            ),
+          ),
+        );
+      },
+    );
+  }
+}
+
+/// Onda ondulada estilo Material 3 Expressive que aparece al reproducir.
+class _ExpressiveWorm extends StatefulWidget {
+  const _ExpressiveWorm({required this.color});
+
+  final Color color;
+
+  @override
+  State<_ExpressiveWorm> createState() => _ExpressiveWormState();
+}
+
+class _ExpressiveWormState extends State<_ExpressiveWorm>
+    with SingleTickerProviderStateMixin {
+  late final AnimationController _controller;
+
+  @override
+  void initState() {
+    super.initState();
+    _controller = AnimationController(
+      vsync: this,
+      duration: const Duration(milliseconds: 1500),
+    )..repeat();
+    _controller.addListener(_onTick);
+  }
+
+  void _onTick() => setState(() {});
+
+  @override
+  void dispose() {
+    _controller.removeListener(_onTick);
+    _controller.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return SizedBox(
+      height: 22,
+      child: CustomPaint(
+        painter: _WormPainter(phase: _controller.value, color: widget.color),
+        child: const SizedBox.expand(),
+      ),
+    );
+  }
+}
+
+class _WormPainter extends CustomPainter {
+  const _WormPainter({required this.phase, required this.color});
+
+  final double phase;
+  final Color color;
+
+  @override
+  void paint(Canvas canvas, Size size) {
+    final glow = Paint()
+      ..color = color.withOpacity(0.16)
+      ..style = PaintingStyle.stroke
+      ..strokeWidth = 11
+      ..strokeCap = StrokeCap.round
+      ..strokeJoin = StrokeJoin.round;
+    final line = Paint()
+      ..color = color
+      ..style = PaintingStyle.stroke
+      ..strokeWidth = 5
+      ..strokeCap = StrokeCap.round
+      ..strokeJoin = StrokeJoin.round;
+
+    const cycles = 2.6;
+    const steps = 72;
+    final path = Path();
+    for (var i = 0; i <= steps; i++) {
+      final t = i / steps;
+      final x = t * size.width;
+      final y = size.height / 2 +
+          math.sin(t * cycles * math.pi * 2 + phase * math.pi * 2) *
+              size.height *
+              0.30;
+      if (i == 0) {
+        path.moveTo(x, y);
+      } else {
+        path.lineTo(x, y);
+      }
+    }
+    canvas.drawPath(path, glow);
+    canvas.drawPath(path, line);
+
+    final headY = size.height / 2 +
+        math.sin(cycles * math.pi * 2 + phase * math.pi * 2) *
+            size.height *
+            0.30;
+    canvas.drawCircle(
+      Offset(size.width - 2, headY),
+      4.5,
+      Paint()..color = color.withOpacity(0.85),
+    );
+  }
+
+  @override
+  bool shouldRepaint(covariant _WormPainter oldDelegate) =>
+      oldDelegate.phase != phase || oldDelegate.color != color;
 }
 
 class _DragHandle extends StatelessWidget {
@@ -403,34 +565,36 @@ class _Orb extends StatelessWidget {
 }
 
 class _HeroArtwork extends StatelessWidget {
-  const _HeroArtwork({required this.track});
+  const _HeroArtwork({required this.track, this.size = 224});
 
   final Track track;
+  final double size;
 
   @override
   Widget build(BuildContext context) {
     final scheme = Theme.of(context).colorScheme;
+    final iconSize = (size * 0.46).clamp(48.0, 112.0);
     return Container(
-      width: 224,
-      height: 224,
+      width: size,
+      height: size,
       clipBehavior: Clip.antiAlias,
       decoration: BoxDecoration(
         color: scheme.secondaryContainer,
-        borderRadius: BorderRadius.circular(34),
+        borderRadius: BorderRadius.circular(size * 0.15),
         boxShadow: [
           BoxShadow(
             color: scheme.shadow.withOpacity(0.28),
-            blurRadius: 34,
-            offset: const Offset(0, 18),
+            blurRadius: size * 0.15,
+            offset: Offset(0, size * 0.08),
           ),
         ],
       ),
       child: context.watch<UserPreferencesService>().artworkBlur
           ? ImageFiltered(
               imageFilter: ImageFilter.blur(sigmaX: 3, sigmaY: 3),
-              child: TrackArtwork(track: track, iconSize: 104),
+              child: TrackArtwork(track: track, iconSize: iconSize),
             )
-          : TrackArtwork(track: track, iconSize: 104),
+          : TrackArtwork(track: track, iconSize: iconSize),
     );
   }
 }

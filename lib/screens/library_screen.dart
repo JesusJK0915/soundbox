@@ -8,6 +8,7 @@ import '../core/library_service.dart';
 import '../core/library_tools.dart';
 import '../core/lyrics_service.dart';
 import '../core/models.dart';
+import '../core/pro_toolkit.dart';
 import '../core/user_preferences.dart';
 import '../player/player_service.dart';
 import '../widgets/track_artwork.dart';
@@ -42,17 +43,12 @@ class _LibraryScreenState extends State<LibraryScreen> {
     UserPreferencesService prefs,
   ) {
     var tracks = library.playableTracks;
-    final query = _search.text.trim().toLowerCase();
+    final query = _search.text.trim();
     if (query.isNotEmpty) {
-      tracks = tracks.where((track) {
-        return [
-          track.title,
-          track.artist,
-          track.album ?? '',
-          track.genre ?? '',
-          track.year?.toString() ?? '',
-        ].join(' ').toLowerCase().contains(query);
-      }).toList();
+      tracks = PlaylistToolsPro.filterTracks(
+        tracks,
+        query,
+      );
     }
 
     switch (_filter) {

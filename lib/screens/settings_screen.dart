@@ -144,7 +144,7 @@ class SettingsScreen extends StatelessWidget {
         ListTile(
           leading: const Icon(Icons.info_outline),
           title: const Text('SoundBox'),
-          subtitle: const Text('Version $appVersion (beta)'),
+          subtitle: const Text('Version $appVersion (estable)'),
         ),
         Consumer<ConnectivityService>(
           builder: (context, connectivity, _) => ListTile(
@@ -267,6 +267,17 @@ class SettingsScreen extends StatelessWidget {
                     onChanged: prefs.setArtworkBlur,
                   ),
                 ),
+                Consumer<UserPreferencesService>(
+                  builder: (context, prefs, _) => SwitchListTile(
+                    secondary: const Icon(Icons.graphic_eq),
+                    title: const Text('Onda Material Expressive'),
+                    subtitle: const Text(
+                      'Muestra el gusano animado solo mientras suena la música.',
+                    ),
+                    value: prefs.expressiveWorm,
+                    onChanged: prefs.setExpressiveWorm,
+                  ),
+                ),
                 const Padding(
                   padding: EdgeInsets.symmetric(horizontal: 16, vertical: 4),
                   child: Text(
@@ -316,9 +327,9 @@ class SettingsScreen extends StatelessWidget {
               ),
               SwitchListTile(
                 secondary: const Icon(Icons.airplay_outlined),
-                title: const Text('Dock flotante'),
+                title: const Text('Mini reproductor fijo'),
                 subtitle: const Text(
-                  'Mini reproductor arrastrable. Se acopla arriba o abajo.',
+                  'Muestra el reproductor compacto en la parte inferior.',
                 ),
                 value: prefs.dockVisible,
                 onChanged: prefs.setDockVisible,

@@ -9,8 +9,8 @@ import 'package:shared_preferences/shared_preferences.dart';
 
 import 'config.dart';
 
-/// Canal de publicacion. Alpha usa el APK debug y beta los APK por ABI.
-enum UpdateChannel { alpha, beta }
+/// Canal de publicacion. Alpha usa el APK debug; beta y stable los APK por ABI.
+enum UpdateChannel { alpha, beta, stable }
 
 enum UpdateStatus {
   idle,
@@ -250,17 +250,39 @@ class UpdateService extends ChangeNotifier {
     }
   }
 
-  static UpdateChannel channelFromName(String value) =>
-      value.toLowerCase() == 'alpha'
-          ? UpdateChannel.alpha
-          : UpdateChannel.beta;
+  static UpdateChannel channelFromName(String value) {
+    final normalized = value.toLowerCase();
+    if (normalized == 'alpha') return UpdateChannel.alpha;
+    if (normalized == 'stable') return UpdateChannel.stable;
+    return UpdateChannel.beta;
+  }
 
-  static String tagPrefix(UpdateChannel channel) => channel == UpdateChannel.alpha
-      ? 'v0.1.0-alpha.'
-      : 'v0.2.0-beta.';
+  static String tagPrefix(UpdateChannel channel) {
+    switch (channel) {
+      case UpdateChannel.alpha:
+        return 'v0.1.0-alpha.';
+      case UpdateChannel.beta:
+        return 'v0.2.0-beta.';
+      case UpdateChannel.stable:
+        return 'v';
+    }
+  }
 
-  static int buildFromTag(String tag) =>
-      int.tryParse(RegExp(r'(\d+)$').firstMatch(tag)?.group(1) ?? '') ?? 0;
+  /// Convierte una etiqueta en un numero comparable.
+  ///
+  /// Los canales alpha/beta usan el numero de build del final de la etiqueta.
+  /// El canal estable usa `major * 100 + minor * 10 + patch`, respetando la
+  /// regla de que cada segmento de la version tiene como maximo 9.
+  static int buildFromTag(String tag) {
+    final stable = RegExp(r'^v(\d+)\.(\d+)\.(\d+)$').firstMatch(tag);
+    if (stable != null) {
+      final major = int.parse(stable.group(1)!);
+      final minor = int.parse(stable.group(2)!);
+      final patch = int.parse(stable.group(3)!);
+      return major * 100 + minor * 10 + patch;
+    }
+    return int.tryParse(RegExp(r'(\d+)$').firstMatch(tag)?.group(1) ?? '') ?? 0;
+  }
 
   static bool isNewerTag(String tag, int currentBuild) =>
       currentBuild > 0 && buildFromTag(tag) > currentBuild;
@@ -297,6 +319,8 @@ class UpdateService extends ChangeNotifier {
     final json = Map<String, dynamic>.from(value);
     final tag = json['tag_name'] as String?;
     if (tag == null || !tag.startsWith(tagPrefix(channel))) return null;
+    // El prefijo "v" del canal estable tambien coincide con alpha/beta.
+    if (channel == UpdateChannel.stable && tag.contains('-')) return null;
 
     final wanted = assetNameFor(channel, abi);
     String? assetName;

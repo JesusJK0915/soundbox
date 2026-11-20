@@ -23,6 +23,8 @@ void main() {
     test('extrae el numero de build del final de la etiqueta', () {
       expect(UpdateService.buildFromTag('v0.2.0-beta.22'), 22);
       expect(UpdateService.buildFromTag('v0.1.0-alpha.25'), 25);
+      expect(UpdateService.buildFromTag('v1.0.3'), 103);
+      expect(UpdateService.buildFromTag('v1.1.0'), 110);
       expect(UpdateService.buildFromTag('sin-numero'), 0);
     });
 
@@ -77,6 +79,28 @@ void main() {
         'arm64-v8a',
       );
       expect(release, isNull);
+    });
+
+    test('el canal estable ignora pre-releases y usa version semantica', () {
+      expect(UpdateService.channelFromName('stable'), UpdateChannel.stable);
+      expect(UpdateService.assetNameFor(UpdateChannel.stable, 'arm64-v8a'),
+          'app-arm64-v8a-release.apk');
+
+      final stable = UpdateService.parseRelease(
+        releaseJson('v1.0.3', ['app-arm64-v8a-release.apk']),
+        UpdateChannel.stable,
+        'arm64-v8a',
+      );
+      expect(stable, isNotNull);
+      expect(stable!.buildNumber, 103);
+
+      final prerelease = UpdateService.parseRelease(
+        releaseJson('v0.2.0-beta.47', ['app-arm64-v8a-release.apk']),
+        UpdateChannel.stable,
+        'arm64-v8a',
+      );
+      expect(prerelease, isNull);
+      expect(UpdateService.isNewerTag('v1.0.3', 102), isTrue);
     });
 
     test('elige el build mas alto aunque la API no venga ordenada', () {

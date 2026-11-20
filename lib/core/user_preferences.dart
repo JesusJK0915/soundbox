@@ -54,6 +54,7 @@ class UserPreferencesService extends ChangeNotifier {
   static const lyricFontKey = 'user.lyric_font';
   static const artworkBlurKey = 'user.artwork_blur';
   static const lowDataKey = 'user.low_data';
+  static const expressiveWormKey = 'user.expressive_worm';
 
   UserPreferencesService([SharedPreferences? prefs]) : _prefs = prefs {
     _favorites = _readList(favoritesKey).toSet();
@@ -101,6 +102,7 @@ class UserPreferencesService extends ChangeNotifier {
     _lyricFont = _prefs?.getDouble(lyricFontKey) ?? 22;
     _artworkBlur = flag(artworkBlurKey, false);
     _lowData = flag(lowDataKey, false);
+    _expressiveWorm = flag(expressiveWormKey, true);
   }
 
   bool flag(String key, bool fallback) => _prefs?.getBool(key) ?? fallback;
@@ -151,6 +153,7 @@ class UserPreferencesService extends ChangeNotifier {
   late double _lyricFont;
   late bool _artworkBlur;
   late bool _lowData;
+  late bool _expressiveWorm;
 
   static Future<UserPreferencesService> load() async =>
       UserPreferencesService(await SharedPreferences.getInstance());
@@ -342,7 +345,7 @@ class UserPreferencesService extends ChangeNotifier {
   double get dockX => _dockX;
   double get dockY => _dockY;
 
-  /// Guarda la posición normalizada (0..1) del dock flotante.
+  /// Compatibilidad con preferencias antiguas; el mini reproductor ya es fijo.
   Future<void> setDockOffset(double x, double y) async {
     _dockX = x.clamp(0.0, 1.0);
     _dockY = y.clamp(0.0, 1.0);
@@ -434,6 +437,11 @@ class UserPreferencesService extends ChangeNotifier {
   bool get lowData => _lowData;
   Future<void> setLowData(bool value) =>
       _setFlag(lowDataKey, value, (v) => _lowData = v);
+
+  /// Onda animada estilo Material 3 Expressive mientras suena la musica.
+  bool get expressiveWorm => _expressiveWorm;
+  Future<void> setExpressiveWorm(bool value) =>
+      _setFlag(expressiveWormKey, value, (v) => _expressiveWorm = v);
 
   double get lyricFont => _lyricFont;
   Future<void> setLyricFont(double value) async {
