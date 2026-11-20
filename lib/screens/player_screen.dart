@@ -264,15 +264,9 @@ class _PlayerBody extends StatelessWidget {
                     position: player.position,
                     duration: duration,
                     onSeek: player.seek,
+                    showWorm: player.isPlaying && prefs.expressiveWorm,
                   ),
-                  const SizedBox(height: 6),
-                  if (player.isPlaying && prefs.expressiveWorm)
-                    _ExpressiveWorm(
-                      color: Theme.of(context).colorScheme.primary,
-                    )
-                  else
-                    const SizedBox(height: 22),
-                  const SizedBox(height: 6),
+                  const SizedBox(height: 12),
                   _Controls(player: player),
                   if (showVolume) ...[
                     const SizedBox(height: 10),
@@ -706,6 +700,7 @@ class _Progress extends StatelessWidget {
     required this.position,
     required this.duration,
     required this.onSeek,
+    required this.showWorm,
   });
 
   final int currentMs;
@@ -713,19 +708,47 @@ class _Progress extends StatelessWidget {
   final Duration position;
   final Duration duration;
   final ValueChanged<Duration> onSeek;
+  final bool showWorm;
 
   @override
   Widget build(BuildContext context) {
     final scheme = Theme.of(context).colorScheme;
     return Column(
       children: [
-        Slider(
-          value: currentMs.toDouble(),
-          max: maxMs.toDouble(),
-          activeColor: scheme.primary,
-          inactiveColor: scheme.secondaryContainer,
-          thumbColor: scheme.primary,
-          onChanged: (value) => onSeek(Duration(milliseconds: value.toInt())),
+        LayoutBuilder(
+          builder: (context, constraints) {
+            final width = constraints.maxWidth;
+            final fraction = (currentMs / maxMs).clamp(0.0, 1.0);
+            final thumbX = 12 + (width - 24) * fraction;
+            return SizedBox(
+              height: 48,
+              child: Stack(
+                children: [
+                  Slider(
+                    value: currentMs.toDouble(),
+                    max: maxMs.toDouble(),
+                    activeColor: scheme.primary,
+                    inactiveColor: scheme.secondaryContainer,
+                    thumbColor: showWorm ? Colors.transparent : scheme.primary,
+                    onChanged: (value) =>
+                        onSeek(Duration(milliseconds: value.toInt())),
+                  ),
+                  if (showWorm)
+                    Positioned(
+                      left: thumbX - 22,
+                      top: 0,
+                      width: 44,
+                      height: 48,
+                      child: IgnorePointer(
+                        child: Center(
+                          child: _ExpressiveWorm(color: scheme.primary),
+                        ),
+                      ),
+                    ),
+                ],
+              ),
+            );
+          },
         ),
         Padding(
           padding: const EdgeInsets.symmetric(horizontal: 2),

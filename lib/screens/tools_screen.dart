@@ -136,18 +136,100 @@ class _HistoryTab extends StatelessWidget {
             itemCount: history.length,
             separatorBuilder: (_, __) => const Divider(height: 1),
             itemBuilder: (context, index) {
-              final track = history[index];
-              return ListTile(
-                leading: TrackArtwork(track: track, iconSize: 44),
-                title: Text(track.title, maxLines: 1),
-                subtitle: Text(track.artist, maxLines: 1),
-                trailing: Text('${index + 1}'),
-                onTap: () => context.read<PlayerService>().playNext(track),
+              return _FilledHistoryButton(
+                track: history[index],
+                index: index,
               );
             },
           ),
         ),
       ],
+    );
+  }
+}
+
+/// Boton relleno estilo Material Expressive con respuesta animada al toque.
+class _FilledHistoryButton extends StatefulWidget {
+  const _FilledHistoryButton({required this.track, required this.index});
+
+  final Track track;
+  final int index;
+
+  @override
+  State<_FilledHistoryButton> createState() => _FilledHistoryButtonState();
+}
+
+class _FilledHistoryButtonState extends State<_FilledHistoryButton> {
+  bool _pressed = false;
+
+  void _setPressed(bool value) {
+    if (!mounted) return;
+    setState(() => _pressed = value);
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final scheme = Theme.of(context).colorScheme;
+    final player = context.read<PlayerService>();
+    return Padding(
+      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+      child: AnimatedScale(
+        scale: _pressed ? 0.96 : 1,
+        duration: const Duration(milliseconds: 120),
+        curve: Curves.easeOut,
+        child: Material(
+          color: scheme.primaryContainer,
+          borderRadius: BorderRadius.circular(16),
+          clipBehavior: Clip.antiAlias,
+          child: InkWell(
+            onTapDown: (_) => _setPressed(true),
+            onTapUp: (_) => _setPressed(false),
+            onTapCancel: () => _setPressed(false),
+            onTap: () {
+              _setPressed(false);
+              player.playNext(widget.track);
+            },
+            child: Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 8),
+              child: Row(
+                children: [
+                  TrackArtwork(track: widget.track, iconSize: 40),
+                  const SizedBox(width: 10),
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          widget.track.title,
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
+                          style: TextStyle(
+                            color: scheme.onPrimaryContainer,
+                            fontWeight: FontWeight.w600,
+                          ),
+                        ),
+                        Text(
+                          '${widget.track.artist} · ${widget.index + 1}',
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
+                          style: TextStyle(
+                            color: scheme.onPrimaryContainer.withOpacity(0.75),
+                            fontSize: 12,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                  Icon(
+                    Icons.play_arrow_rounded,
+                    color: scheme.onPrimaryContainer,
+                  ),
+                ],
+              ),
+            ),
+          ),
+        ),
+      ),
     );
   }
 }

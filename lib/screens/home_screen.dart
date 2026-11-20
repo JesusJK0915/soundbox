@@ -116,26 +116,38 @@ class _HomeScreenState extends State<HomeScreen> {
             ],
           ),
           floatingActionButton: _index == 0 ? const _LibraryFab() : null,
-          body: Column(
-            children: [
-              Consumer<ConnectivityService>(
-                builder: (context, connectivity, _) {
-                  if (connectivity.isOnline) return const SizedBox.shrink();
-                  return Container(
-                    width: double.infinity,
-                    color: Colors.orange.shade900,
-                    padding: const EdgeInsets.symmetric(vertical: 6),
-                    child: const Text(
-                      'Sin conexion: solo biblioteca local disponible',
-                      textAlign: TextAlign.center,
-                      style: TextStyle(fontSize: 12),
-                    ),
-                  );
-                },
-              ),
-              Expanded(child: _pages[_index]),
-              const MiniPlayer(),
-            ],
+          body: GestureDetector(
+            onHorizontalDragEnd: (details) {
+              if (!prefs.gestures) return;
+              final velocity = details.primaryVelocity ?? 0;
+              if (velocity.abs() < 350) return;
+              if (velocity < 0) {
+                _goTo((_index + 1).clamp(0, _pages.length - 1));
+              } else {
+                _goTo((_index - 1).clamp(0, _pages.length - 1));
+              }
+            },
+            child: Column(
+              children: [
+                Consumer<ConnectivityService>(
+                  builder: (context, connectivity, _) {
+                    if (connectivity.isOnline) return const SizedBox.shrink();
+                    return Container(
+                      width: double.infinity,
+                      color: Colors.orange.shade900,
+                      padding: const EdgeInsets.symmetric(vertical: 6),
+                      child: const Text(
+                        'Sin conexion: solo biblioteca local disponible',
+                        textAlign: TextAlign.center,
+                        style: TextStyle(fontSize: 12),
+                      ),
+                    );
+                  },
+                ),
+                Expanded(child: _pages[_index]),
+                const MiniPlayer(),
+              ],
+            ),
           ),
           bottomNavigationBar: Column(
             mainAxisSize: MainAxisSize.min,

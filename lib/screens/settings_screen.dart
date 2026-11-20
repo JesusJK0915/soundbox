@@ -272,7 +272,7 @@ class SettingsScreen extends StatelessWidget {
                     secondary: const Icon(Icons.graphic_eq),
                     title: const Text('Onda Material Expressive'),
                     subtitle: const Text(
-                      'Muestra el gusano animado solo mientras suena la música.',
+                      'Muestra el gusano animado sobre el control del tiempo solo mientras suena la música.',
                     ),
                     value: prefs.expressiveWorm,
                     onChanged: prefs.setExpressiveWorm,

@@ -1,7 +1,7 @@
 name: soundbox
 description: Reproductor y biblioteca musical offline con busqueda legal y descargas.
 publish_to: 'none'
-version: 1.0.3+103
+version: 1.1.0+110
 
 environment:
   sdk: '>=3.4.0 <4.0.0'

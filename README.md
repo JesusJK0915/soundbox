@@ -59,7 +59,7 @@ Play Store):
   6 horas) y muestra un diálogo con las notas del release.
 - El canal se detecta según la compilación: **alpha** busca
   `v0.1.0-alpha.*`, **beta** busca `v0.2.0-beta.*` y la compilación
-  **estable** busca etiquetas `vX.Y.Z` sin guion (por ejemplo `v1.0.3`).
+  **estable** busca etiquetas `vX.Y.Z` sin guion (por ejemplo `v1.1.0`).
 - El APK se elige según la arquitectura del teléfono (`arm64-v8a`,
   `armeabi-v7a` o `x86_64`). Las compilaciones alpha usan `app-debug.apk`.
 - Puedes descargar e instalar desde el propio diálogo, abrir la página del
@@ -74,20 +74,23 @@ Los workflows inyectan `--dart-define=UPDATE_CHANNEL=...` y
 `--dart-define=UPDATE_BUILD=<codigo>` para que el número de build comparado
 sea exactamente el mismo de la etiqueta publicada.
 
-## Versión estable 1.0.3
+## Versión estable 1.1.0
 
 Esta versión es una release **estable** (no alpha ni beta). Incluye:
 
-- Versión real de Android `1.0.3` con `versionCode 103`, generada desde
+- Versión real de Android `1.1.0` con `versionCode 110`, generada desde
   `pubspec.yaml` y los argumentos `--build-name` / `--build-number` del
   workflow, sin el antiguo `0.1.0`.
-- Reproductor centrado con el indicador de carga Material Expressive 3
-  (gusanito) visible solo durante la reproducción.
-- **100 funciones nuevas útiles** en `lib/core/pro_toolkit.dart`, cubiertas
-  por `test/pro_toolkit_test.dart`.
-- **100 mejoras**: 50 sobre las funciones nuevas y 50 sobre funciones ya
-  existentes del reproductor, biblioteca, letras, descargas, ajustes y
-  mantenimiento.
+- Reproductor centrado con el indicador Material Expressive 3 (gusanito)
+  **sobre el control deslizante del tiempo**, visible solo mientras suena la
+  música y respetando el interruptor de Ajustes.
+- Deslizamiento horizontal entre las cinco pestañas cuando los gestos están
+  activados.
+- Historial con botones rellenos y animación de pulsación al tocarlos.
+- **300 funciones útiles** en `lib/core/pro_toolkit.dart` (100 originales más
+  200 nuevas), cubiertas por `test/pro_toolkit_test.dart`.
+- **300 mejoras**: 100 nuevas sobre las funciones recientes, 100 nuevas sobre
+  funciones anteriores y las 100 mejoras de la versión 1.0.3.
 - Sin dock flotante; el mini reproductor es fijo.
 - Solo audio; se mantienen los proveedores legales y las letras automáticas
   con LRCLIB (Recomendado), sin IA local.
