@@ -11,11 +11,11 @@ import 'models.dart';
 class LibraryToolsPro {
   static String normalizeText(String value) {
     final withoutDiacritics = value
-        .replaceAll(RegExp(r'[áàäâã]'), 'a')
-        .replaceAll(RegExp(r'[éèëê]'), 'e')
-        .replaceAll(RegExp(r'[íìïî]'), 'i')
-        .replaceAll(RegExp(r'[óòöôõ]'), 'o')
-        .replaceAll(RegExp(r'[úùüû]'), 'u');
+        .replaceAll(RegExp(r'[áàäâãÁÀÄÂÃ]'), 'a')
+        .replaceAll(RegExp(r'[éèëêÉÈËÊ]'), 'e')
+        .replaceAll(RegExp(r'[íìïîÍÌÏÎ]'), 'i')
+        .replaceAll(RegExp(r'[óòöôõÓÒÖÔÕ]'), 'o')
+        .replaceAll(RegExp(r'[úùüûÚÙÜÛ]'), 'u');
     return withoutDiacritics.toLowerCase().trim();
   }
 
