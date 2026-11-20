@@ -425,7 +425,7 @@ class PlaylistToolsPro {
     if (tracks.isEmpty) return 'Nueva playlist';
     if (tracks.length == 1) return tracks.first.title;
     final artist = LibraryToolsPro.splitArtists(tracks.first.artist).first;
-    return '${artist} · ${tracks.length} canciones';
+    return '$artist · ${tracks.length} canciones';
   }
 }
 

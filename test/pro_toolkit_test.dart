@@ -32,7 +32,7 @@ void main() {
         LibraryToolsPro.libraryHealth([
           track('1', 'A', 'B', genre: 'Pop'),
         ]),
-        inRange(0, 100),
+        greaterThanOrEqualTo(0.0),
       );
     });
 

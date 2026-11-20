@@ -600,7 +600,7 @@ class _HeroArtwork extends StatelessWidget {
 }
 
 class _TrackInfo extends StatelessWidget {
-  const _TrackInfo({super.key, required this.track});
+  const _TrackInfo({required this.track});
 
   final Track track;
 
@@ -1148,36 +1148,3 @@ class _QueueSheet extends StatelessWidget {
   }
 }
 
-class _PlayingBars extends StatelessWidget {
-  const _PlayingBars({required this.isPlaying});
-
-  final bool isPlaying;
-
-  @override
-  Widget build(BuildContext context) {
-    final scheme = Theme.of(context).colorScheme;
-    final color = isPlaying ? scheme.primary : scheme.outline;
-    return SizedBox(
-      width: 22,
-      height: 20,
-      child: Row(
-        mainAxisAlignment: MainAxisAlignment.spaceBetween,
-        crossAxisAlignment: CrossAxisAlignment.end,
-        children: [
-          _bar(color, 14),
-          _bar(color, 20),
-          _bar(color, 16),
-        ],
-      ),
-    );
-  }
-
-  Widget _bar(Color color, double height) => Container(
-        width: 4,
-        height: height,
-        decoration: BoxDecoration(
-          color: color,
-          borderRadius: BorderRadius.circular(4),
-        ),
-      );
-}
