@@ -26,6 +26,8 @@ class HomeScreen extends StatefulWidget {
 class _HomeScreenState extends State<HomeScreen> {
   int _index = 0;
   UpdateService? _updates;
+  double? _dragStartX;
+  double? _dragStartY;
 
   late final List<Widget> _pages = const [
     LibraryScreen(),
@@ -116,16 +118,33 @@ class _HomeScreenState extends State<HomeScreen> {
             ],
           ),
           floatingActionButton: _index == 0 ? const _LibraryFab() : null,
-          body: GestureDetector(
-            onHorizontalDragEnd: (details) {
-              if (!prefs.gestures) return;
-              final velocity = details.primaryVelocity ?? 0;
-              if (velocity.abs() < 350) return;
-              if (velocity < 0) {
+          // Listener recibe los eventos crudos aunque el hijo tenga un
+          // TextField o un Scrollable, que antes ganaban la arena de gestos
+          // y dejaban el swipe trabado en Buscar.
+          body: Listener(
+            behavior: HitTestBehavior.translucent,
+            onPointerDown: (event) {
+              _dragStartX = event.localPosition.dx;
+              _dragStartY = event.localPosition.dy;
+            },
+            onPointerUp: (event) {
+              final startX = _dragStartX;
+              final startY = _dragStartY;
+              _dragStartX = null;
+              _dragStartY = null;
+              if (!prefs.gestures || startX == null || startY == null) return;
+              final dx = event.localPosition.dx - startX;
+              final dy = event.localPosition.dy - startY;
+              if (dx.abs() < 80 || dx.abs() <= dy.abs() * 1.5) return;
+              if (dx < 0) {
                 _goTo((_index + 1).clamp(0, _pages.length - 1));
               } else {
                 _goTo((_index - 1).clamp(0, _pages.length - 1));
               }
+            },
+            onPointerCancel: (_) {
+              _dragStartX = null;
+              _dragStartY = null;
             },
             child: Column(
               children: [

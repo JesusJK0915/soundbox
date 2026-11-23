@@ -1,5 +1,13 @@
 # Changelog
 
+## 1.2.1 (estable)
+
+Parche estable sobre `v1.2.0`. No es alpha ni beta.
+
+1. El swipe horizontal usa eventos crudos `Listener` en lugar de `onHorizontalDragEnd`, de modo que funciona también desde `Buscar` aunque el campo de texto gane la arena de gestos.
+2. Se conservan el gusanito ME3 alineado con el pulgar, las 500 utilidades y las 400 mejoras de `1.2.0`.
+3. Versión real de Android `1.2.1` con `versionCode 121` (arm64: `2121`).
+
 ## 1.2.0 (estable)
 
 Release estable. No es alpha ni beta. Construida sobre `v1.1.0` sin reintroducir el dock flotante.
@@ -10,8 +18,9 @@ Release estable. No es alpha ni beta. Construida sobre `v1.1.0` sin reintroducir
 2. El `Slider` del tiempo usa un `SliderTheme` con radio de pulgar explícito para que la onda quede exactamente sobre la pista.
 3. La posición de la onda se calcula con el radio real (`10`) y se limita al ancho disponible, sin desbordarse en los extremos.
 4. Se mantiene el gusanito solo durante la reproducción y respetando `prefs.expressiveWorm`.
-5. El swipe entre las cinco pestañas y los botones rellenos del Historial se conservan sin cambios.
-6. Versión real de Android `1.2.0` con `versionCode 120`.
+5. El swipe entre las cinco pestañas usa eventos crudos (`Listener`) para no quedar trabado en `Buscar` cuando el campo de texto gana la arena de gestos.
+6. Los botones rellenos del Historial se conservan sin cambios.
+7. Versión real de Android `1.2.0` con `versionCode 120` (los APKs split suman el offset de ABI: `2120` en arm64).
 
 ### 200 funciones nuevas
 

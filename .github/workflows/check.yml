@@ -53,10 +53,10 @@ jobs:
       - name: Build APK release por ABI (check)
         run: |
           flutter build apk --release --split-per-abi \
-            --build-name=1.2.0 \
-            --build-number=120 \
+            --build-name=1.2.1 \
+            --build-number=121 \
             --dart-define=UPDATE_CHANNEL=stable \
-            --dart-define=UPDATE_BUILD=120
+            --dart-define=UPDATE_BUILD=121
 
       - name: Subir artefacto de verificacion
         uses: actions/upload-artifact@v4

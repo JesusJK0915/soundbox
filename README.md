@@ -74,11 +74,11 @@ Los workflows inyectan `--dart-define=UPDATE_CHANNEL=...` y
 `--dart-define=UPDATE_BUILD=<codigo>` para que el número de build comparado
 sea exactamente el mismo de la etiqueta publicada.
 
-## Versión estable 1.2.0
+## Versión estable 1.2.1
 
 Esta versión es una release **estable** (no alpha ni beta). Incluye:
 
-- Versión real de Android `1.2.0` con `versionCode 120`, generada desde
+- Versión real de Android `1.2.1` con `versionCode 121`, generada desde
   `pubspec.yaml` y los argumentos `--build-name` / `--build-number` del
   workflow, sin el antiguo `0.1.0`.
 - Reproductor centrado con el indicador Material Expressive 3 (gusanito)
@@ -86,7 +86,7 @@ Esta versión es una release **estable** (no alpha ni beta). Incluye:
   con el pulgar mediante un `SliderTheme` con radio explícito, y solo aparece
   mientras suena la música y con el interruptor de Ajustes activo.
 - Deslizamiento horizontal entre las cinco pestañas cuando los gestos están
-  activados.
+  activados, usando eventos crudos para no trabarse en `Buscar`.
 - Historial con botones rellenos y animación de pulsación al tocarlos.
 - **500 funciones útiles**: las 300 de `lib/core/pro_toolkit.dart` más 200
   nuevas en `lib/core/pro_toolkit_v2.dart`, cubiertas por
