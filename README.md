@@ -74,24 +74,26 @@ Los workflows inyectan `--dart-define=UPDATE_CHANNEL=...` y
 `--dart-define=UPDATE_BUILD=<codigo>` para que el número de build comparado
 sea exactamente el mismo de la etiqueta publicada.
 
-## Versión estable 1.1.0
+## Versión estable 1.2.0
 
 Esta versión es una release **estable** (no alpha ni beta). Incluye:
 
-- Versión real de Android `1.1.0` con `versionCode 110`, generada desde
+- Versión real de Android `1.2.0` con `versionCode 120`, generada desde
   `pubspec.yaml` y los argumentos `--build-name` / `--build-number` del
   workflow, sin el antiguo `0.1.0`.
 - Reproductor centrado con el indicador Material Expressive 3 (gusanito)
-  **sobre el control deslizante del tiempo**, visible solo mientras suena la
-  música y respetando el interruptor de Ajustes.
+  **sobre el control deslizante del tiempo**: la cabeza de la onda coincide
+  con el pulgar mediante un `SliderTheme` con radio explícito, y solo aparece
+  mientras suena la música y con el interruptor de Ajustes activo.
 - Deslizamiento horizontal entre las cinco pestañas cuando los gestos están
   activados.
 - Historial con botones rellenos y animación de pulsación al tocarlos.
-- **300 funciones útiles** en `lib/core/pro_toolkit.dart` (100 originales más
-  200 nuevas), cubiertas por `test/pro_toolkit_test.dart` y
-  `test/pro_toolkit_expanded_test.dart`.
-- **300 mejoras**: 100 nuevas sobre las funciones recientes, 100 nuevas sobre
-  funciones anteriores y las 100 mejoras de la versión 1.0.3.
+- **500 funciones útiles**: las 300 de `lib/core/pro_toolkit.dart` más 200
+  nuevas en `lib/core/pro_toolkit_v2.dart`, cubiertas por
+  `test/pro_toolkit_test.dart`, `test/pro_toolkit_expanded_test.dart` y
+  `test/pro_toolkit_v2_test.dart`.
+- **400 mejoras**: las 300 anteriores más 100 envolturas seguras
+  (`safe…`/`compact…`) sobre utilidades ya publicadas.
 - Sin dock flotante; el mini reproductor es fijo.
 - Solo audio; se mantienen los proveedores legales y las letras automáticas
   con LRCLIB (Recomendado), sin IA local.

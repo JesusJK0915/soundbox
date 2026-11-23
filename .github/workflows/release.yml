@@ -91,6 +91,8 @@ jobs:
         env:
           VERSION_NAME: ${{ steps.version.outputs.name }}
           VERSION_CODE: ${{ steps.version.outputs.code }}
+          SB_VERSION_NAME: ${{ steps.version.outputs.name }}
+          SB_VERSION_CODE: ${{ steps.version.outputs.code }}
         run: |
           flutter build apk --release --split-per-abi \
             --build-name="$VERSION_NAME" \

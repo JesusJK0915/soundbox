@@ -371,12 +371,16 @@ class _WormPainter extends CustomPainter {
     canvas.drawPath(path, glow);
     canvas.drawPath(path, line);
 
+    // La cabeza va en el centro del widget, que coincide con el pulgar
+    // del Slider. Antes se dibujaba en el extremo derecho y parecia
+    // desplazada hacia adelante.
+    final headT = 0.5;
     final headY = size.height / 2 +
-        math.sin(cycles * math.pi * 2 + phase * math.pi * 2) *
+        math.sin(headT * cycles * math.pi * 2 + phase * math.pi * 2) *
             size.height *
             0.30;
     canvas.drawCircle(
-      Offset(size.width - 2, headY),
+      Offset(size.width * headT, headY),
       4.5,
       Paint()..color = color.withOpacity(0.85),
     );
@@ -718,31 +722,48 @@ class _Progress extends StatelessWidget {
         LayoutBuilder(
           builder: (context, constraints) {
             final width = constraints.maxWidth;
-            final fraction = (currentMs / maxMs).clamp(0.0, 1.0);
-            final thumbX = 12 + (width - 24) * fraction;
+            final fraction = maxMs <= 0
+                ? 0.0
+                : (currentMs / maxMs).clamp(0.0, 1.0);
+            // Radio por defecto del Slider de Material 3. Se fija abajo
+            // con SliderTheme para que esta formula y el pulgar coincidan.
+            const thumbRadius = 10.0;
+            const wormWidth = 32.0;
+            final thumbX = thumbRadius + (width - 2 * thumbRadius) * fraction;
+            final wormLeft = (thumbX - wormWidth / 2).clamp(
+              0.0,
+              (width - wormWidth).clamp(0.0, width),
+            );
             return SizedBox(
               height: 48,
               child: Stack(
                 children: [
-                  Slider(
-                    value: currentMs.toDouble(),
-                    max: maxMs.toDouble(),
-                    activeColor: scheme.primary,
-                    inactiveColor: scheme.secondaryContainer,
-                    thumbColor: showWorm ? Colors.transparent : scheme.primary,
-                    onChanged: (value) =>
-                        onSeek(Duration(milliseconds: value.toInt())),
+                  SliderTheme(
+                    data: SliderTheme.of(context).copyWith(
+                      thumbShape: RoundSliderThumbShape(
+                        enabledThumbRadius: thumbRadius,
+                      ),
+                      trackHeight: 4,
+                    ),
+                    child: Slider(
+                      value: currentMs.toDouble(),
+                      max: maxMs.toDouble(),
+                      activeColor: scheme.primary,
+                      inactiveColor: scheme.secondaryContainer,
+                      thumbColor:
+                          showWorm ? Colors.transparent : scheme.primary,
+                      onChanged: (value) =>
+                          onSeek(Duration(milliseconds: value.toInt())),
+                    ),
                   ),
                   if (showWorm)
                     Positioned(
-                      left: thumbX - 22,
-                      top: 0,
-                      width: 44,
-                      height: 48,
+                      left: wormLeft,
+                      top: 14,
+                      width: wormWidth,
+                      height: 20,
                       child: IgnorePointer(
-                        child: Center(
-                          child: _ExpressiveWorm(color: scheme.primary),
-                        ),
+                        child: _ExpressiveWorm(color: scheme.primary),
                       ),
                     ),
                 ],

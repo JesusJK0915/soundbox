@@ -1,5 +1,42 @@
 # Changelog
 
+## 1.2.0 (estable)
+
+Release estable. No es alpha ni beta. Construida sobre `v1.1.0` sin reintroducir el dock flotante.
+
+### Reproductor, navegación e historial
+
+1. La cabeza del gusanito ME3 se dibuja ahora en el centro del widget, que coincide con el pulgar del control de tiempo.
+2. El `Slider` del tiempo usa un `SliderTheme` con radio de pulgar explícito para que la onda quede exactamente sobre la pista.
+3. La posición de la onda se calcula con el radio real (`10`) y se limita al ancho disponible, sin desbordarse en los extremos.
+4. Se mantiene el gusanito solo durante la reproducción y respetando `prefs.expressiveWorm`.
+5. El swipe entre las cinco pestañas y los botones rellenos del Historial se conservan sin cambios.
+6. Versión real de Android `1.2.0` con `versionCode 120`.
+
+### 200 funciones nuevas
+
+`lib/core/pro_toolkit_v2.dart` aporta 200 utilidades puras nuevas, agrupadas en diez clases de veinte métodos:
+
+- `LibraryToolsV2`: `cleanTitle`, `cleanArtist`, `cleanAlbum`, `titleWithoutFeat`, `artistCount`, `hasCollab`, `isExplicit`, `isAcoustic`, `isRemastered`, `isDeluxe`, `safeYearV2`, `safeDurationMsV2`, `durationBucket`, `isLongTrackV2`, `isShortTrackV2`, `secondsTotalV2`, `missingTitleCount`, `missingArtistCount`, `tracksWithYear`, `libraryCompletenessV2`.
+- `PlaybackToolsV2`: `clampVolume`, `clampSpeed`, `repeatModeIndex`, `repeatModeName`, `nextRepeatMode`, `isRepeatOne`, `isRepeatAll`, `isRepeatOff`, `seekForwardMs`, `seekBackwardMs`, `progressRatio`, `playedMs`, `remainingMs`, `isFinishedV2`, `isBeginningV2`, `wrapIndexV2`, `volumeAfterStep`, `speedAfterStep`, `crossfadeFractionV2`, `playbackStateLabel`.
+- `SearchToolsV2`: `compactWhitespaceV2`, `removePunctuationV2`, `tokenListV2`, `uniqueTokensV2`, `tokenCountV2`, `isWildcardV2`, `stripWildcardsV2`, `isQuotedV2`, `unquoteV2`, `exactMatchV2`, `prefixMatchV2`, `containsMatchV2`, `tokenOverlapV2`, `jaccardV2`, `levenshteinV2`, `bestFuzzyIndexV2`, `searchHintV2`, `resultLabelV2`, `isStopWordV2`, `removeStopWordsV2`.
+- `DownloadToolsV2`: `normalizeFormatV2`, `extensionForFormatV2`, `isAudioExtensionV2`, `isVideoExtensionV2`, `urlHostV2`, `urlPathV2`, `isHttpsV2`, `isHttpV2`, `safeFileNameV2`, `fileNameWithoutExtV2`, `fileExtV2`, `estimateSizeLabelV2`, `bitrateToKbpsV2`, `kbpsToBpsV2`, `retryAttemptLabelV2`, `isRetryableV2`, `mimeForExtV2`, `qualityFromBitrateV2`, `downloadProgressV2`, `etaLabelV2`.
+- `PlaylistToolsV2`: `m3uHeaderV2`, `isM3uHeaderV2`, `isExtinfV2`, `parseExtinfSecondsV2`, `parseExtinfTitleV2`, `playlistSlugV2`, `playlistFileNameV2`, `playlistSizeV2`, `playlistDurationSecondsV2`, `playlistDurationLabelV2`, `mergeTracksV2`, `uniqueTracksV2`, `tracksByGenreV2`, `tracksByYearV2`, `tracksByArtistV2`, `shuffleTracksV2`, `firstTitleV2`, `lastTitleV2`, `playlistChecksumV2`, `playlistHealthV2`.
+- `LyricsToolsV2`: `lrcTimeLabelV2`, `isLrcTimestampV2`, `isLrcMetadataV2`, `lrcTimestampMillisV2`, `lrcTextV2`, `stripLrcTagsV2`, `lyricsLineCountV2`, `isLyricsEmptyV2`, `isInstrumentalV2`, `lyricsWordCountV2`, `activeLineIndexV2`, `nextLineIndexV2`, `lyricAtV2`, `safeLyricIndexV2`, `karaokePercentV2`, `syncOffsetLabelV2`, `applyOffsetV2`, `hasTranslationV2`, `firstLyricV2`, `lastLyricV2`.
+- `SettingsToolsV2`: `gestureLabelV2`, `hapticLabelV2`, `wormLabelV2`, `themeLabelV2`, `isDarkThemeV2`, `toggleThemeV2`, `qualityLabelV2`, `crossfadeLabelV2`, `sleepLabelV2`, `volumeLabelV2`, `clampBrightnessV2`, `safeLocaleV2`, `languageLabelV2`, `accessibilitySummaryV2`, `preferenceKeyV2`, `preferenceValueLabelV2`, `storageLabelV2`, `cacheLabelV2`, `networkLabelV2`, `updateChannelLabelV2`.
+- `StatsToolsV2`: `listeningMinutesV2`, `listeningHoursV2`, `dailyAverageV2`, `streakLabelV2`, `topArtistV2`, `topGenreV2`, `uniqueArtistsV2`, `uniqueGenresV2`, `completionRateV2`, `skipRateV2`, `favoriteRatioV2`, `hourBucketV2`, `weekdayLabelV2`, `monthLabelV2`, `yearLabelV2`, `mostPlayedHourV2`, `averageSessionMinutesV2`, `longestSessionV2`, `statsSummaryV2`, `activityLabelV2`.
+- `MaintenanceToolsV2`: `versionCodeFromV2`, `isValidVersionV2`, `segmentLimitV2`, `clampVersionPartV2`, `buildNumberFromTagV2`, `isStableTagV2`, `isPrereleaseTagV2`, `normalizeTagV2`, `cacheKeyV2`, `safeJsonKeyV2`, `truncateV2`, `ellipsizeV2`, `countLinesV2`, `countWordsV2`, `isBlankV2`, `coalesceV2`, `padNumberV2`, `bytesLabelV2`, `percentLabelV2`, `diagnosticSummaryV2`.
+- `ExportToolsV2`: `csvEscapeV2`, `csvHeaderV2`, `csvRowV2`, `jsonSafeV2`, `playlistHeaderV2`, `extinfLineV2`, `trackUriV2`, `exportNameV2`, `exportSizeEstimateV2`, `m3uBodyV2`, `tagsToJsonV2`, `decodeJsonV2`, `fileNameForTrackV2`, `licenseLabelV2`, `providerLabelV2`, `exportSummaryV2`, `isExportableV2`, `exportChecksumV2`, `mimeForExportV2`, `exportVersionTagV2`.
+
+### 100 mejoras sobre funciones anteriores
+
+`ToolkitRefinementsV2` añade 100 envolturas seguras sobre 50 utilidades ya publicadas en 1.0.3 y 1.1.0:
+
+- `safe…`: recibe `Object?`, convierte a texto, recorta espacios y delega en la función original, evitando entradas nulas.
+- `compact…`: además colapsa espacios en blanco antes de delegar.
+
+Las 200 funciones nuevas y las 100 mejoras están cubiertas por `test/pro_toolkit_v2_test.dart`.
+
 ## 1.1.0 (estable)
 
 Release estable. No es alpha ni beta. Construida sobre `v1.0.3` sin reintroducir el dock flotante.
