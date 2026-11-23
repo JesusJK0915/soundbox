@@ -220,7 +220,7 @@ class PlaylistToolsV2 {
   static List<Track> mergeTracksV2(List<Track> a, List<Track> b) => [...a, ...b];
 
   static List<Track> uniqueTracksV2(List<Track> tracks) {
-    tracks.fold<List<Track>>(<Track>[], (list, t) { if (!list.any((x) => x.id == t.id)) list.add(t); return list; })
+    return tracks.fold<List<Track>>(<Track>[], (list, t) { if (!list.any((x) => x.id == t.id)) list.add(t); return list; });
   }
 
   static List<Track> tracksByGenreV2(List<Track> tracks, String genre) => tracks.where((t) => LibraryToolsPro.normalizeText(t.genre ?? '') == LibraryToolsPro.normalizeText(genre)).toList();
@@ -439,7 +439,7 @@ class ExportToolsV2 {
 
   static String trackUriV2(Track track) => track.sourceUrl;
 
-  static String exportNameV2(String name, String ext) => LibraryToolsPro.sanitizeFileName(name) + '.' + normalizeFormatV2(ext);
+  static String exportNameV2(String name, String ext) => LibraryToolsPro.sanitizeFileName(name) + '.' + DownloadToolsV2.normalizeFormatV2(ext);
 
   static int exportSizeEstimateV2(List<Track> tracks) => 64 + tracks.length * 96;
 
@@ -449,7 +449,7 @@ class ExportToolsV2 {
 
   static String decodeJsonV2(String raw) => jsonDecode(raw).toString();
 
-  static String fileNameForTrackV2(Track track) => LibraryToolsPro.sanitizeFileName(track.title) + extensionForFormatV2(track.format ?? 'mp3');
+  static String fileNameForTrackV2(Track track) => LibraryToolsPro.sanitizeFileName(track.title) + DownloadToolsV2.extensionForFormatV2(track.format ?? 'mp3');
 
   static String licenseLabelV2(String? license) => license == null || license.isEmpty ? 'Sin licencia' : license;
 
